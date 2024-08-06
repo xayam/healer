@@ -1,6 +1,8 @@
-['abstraction', 'barriers', 'control', 'daft', 'each', 'fabrication', 'gadget', 'healing', 'imagination', 'key', 'language', 'magnetism', 'name', 'observe', 'paradox', 'quantum', 'remember', 'safe', 'table', 'ufo', 'value', 'wake', 'xray', 'zero']
+['abstraction', 'barriers', 'control', 'daft', 'each', 'fabrication', 'gadget', 'healing', 'imagination', 'jet', 'key', 'language', 'magnetism', 'name', 'observe', 'paradox', 'quantum', 'remember', 'safe', 'table', 'ufo', 'value', 'wake', 'xray', 'yellow', 'zero']
 
-abstraction barriers control daft each fabrication gadget healing imagination key language magnetism name observe paradox quantum remember safe table ufo value wake xray zero
+abstraction barriers control daft each fabrication gadget healing imagination jet key language magnetism name observe paradox quantum remember safe table ufo value wake xray yellow zero
+
+abstraction, barriers, control, daft, each, fabrication, gadget, healing, imagination, jet, key, language, magnetism, name, observe, paradox, quantum, remember, safe, table, ufo, value, wake, xray, yellow, zero
 
 abstraction
 barriers
@@ -11,6 +13,7 @@ fabrication
 gadget
 healing
 imagination
+jet
 key
 language
 magnetism
@@ -25,4 +28,5 @@ ufo
 value
 wake
 xray
+yellow
 zero
