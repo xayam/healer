@@ -6,6 +6,4 @@ __pycache__/
 .run/
 h/model/history/
 h/mvp/history/
-h/model/history/history_*
-h/mvp/history/history_*
 h/player/web/demo-rewlis/data/
