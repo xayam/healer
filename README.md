@@ -1,2 +1,2 @@
-# SoundHealing
-Sound healing project
+# Healer project
+
