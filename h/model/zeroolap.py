@@ -70,21 +70,28 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
         return result + paths
 
 
-def main():
+def main(width):
     result = []
     max_len = 0
-    for width in range(1, 22):
+    limit = zero_limit(width)
+    for width in list(range(1, limit)) + list(range(width, limit, -1)):
         paths = zero_paths(width=width, verbose=0)
-        result.append(paths[-1][1:])
+        result.append(paths)
         len_result = len(result[-1])
         if len_result > max_len:
             max_len = len_result
-    pprint.pprint(result)
+    pprint.pprint(result, width=8*(len(result) ** 2 - len(result[-1]) ** 2))
+    return max_len
 
 
 
 
 if __name__ == "__main__":
-    main()
-
+    passegers = 32
+    maximum = 0
+    for w in range(passegers, passegers + 1):
+        m = main(width=w)
+        if m > maximum:
+            maximum = m
+            # progress(f"{w} {maximum}")
     # zero_paths(name=0, width=32)
