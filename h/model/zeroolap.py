@@ -83,36 +83,28 @@ def extension(width):
     for i in range(len(result)):
         result[i] = [0] * (7 - len(result[i])) + result[i]
         for j in range(len(result[i])):
-            x = result[i][j]
-            result[i][j] = [0] * 2 + [x]
-
+            x = f"{result[i][j]:5b}".replace(' ', '0')
+            result[i][j] = "".join((['00000'] * 2 + [x]))
+        result[i] = "".join(result[i])
+    # print(f"\n".join(result))
     res = []
     r = []
-    # for i in range(0, len(result)):
-    #     res.append(result[i])
-    #     s = "".join(res[-1])
-    #     index = 0
-    #     for pos in range(64):
-    #         if int(s[pos]) == 1:
-    #             index = pos
-    #             break
-    #     r += s[index:][::-1]
-    print(len(r))
-    pprint.pprint(result, width=21*22)
-    sys.exit()
+    for i in range(0, len(result)):
+        s = "".join(result[i])
+        index = s.find('1')
+        r.append(s)
+        index = 21 * 5 - index - 1
+        for j in range(index):
+            r.append("".join((['0'] * (21 * 5))))
     return len(r), r
 
 
 def compress(width: int, data: str, number: int):
     new_width = width
-    summa = 0
-    for i in range(number, -1, -1):
-        summa += (22 - 1) ** i
-    # summa2 = 0
-    # for i in range(number):
-    #     summa2 += (22 - 1) ** i
-    # summa -= summa2
-    new_width -= summa
+    while new_width > 22:
+        new_width -= 21
+        data_left = data[:22]
+
     new_data = data[:new_width]
     return new_width, new_data, data[new_width:]
 
@@ -123,15 +115,11 @@ if __name__ == "__main__":
     number = 1
     while True:
         lr1, r1 = extension(width=count_of_passengers)
-        pprint.pprint(r1)
-        # c0, c1 = 0, 0
-        # for i in r1:
-        #     if i == '0':
-        #         c0 += 1
-        #     else:
-        #         c1 += 1
-        new_width, new_data, data = compress(width=lr1, data=r1, number=number)
+        # pprint.pprint(r1)
+        print(lr1)
+        new_width, new_data, data = compress(width=lr1, data="".join(r1), number=number)
         print(number, len(new_data))
+        break
         number += 1
         count_of_passengers = len(new_data)
 
