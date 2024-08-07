@@ -70,7 +70,7 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
         return result + paths
 
 
-def main(width):
+def extension(width):
     result = []
     max_len = 0
     limit = zero_limit(width)
@@ -85,20 +85,8 @@ def main(width):
         for j in range(len(result[i])):
             x = result[i][j]
             result[i][j] = f"{x:8b}".replace(' ', '0')
-    zero = '0' * 8
-    limit_1 = limit - 1
-    limit_1 = f"{limit_1:8b}".replace(' ', '0')
-    limit = f"{limit:8b}".replace(' ', '0')
-    # s = "".join(result[0])
-    # print(result)
-    # index = 0
-    # for pos in range(64):
-    #     if int(s[pos]) == 1:
-    #         index = pos
-    #         break
-    # if index != 0:
-    #     result.append([*[zero]*(64 - index), limit_1, limit])
     res = []
+    r = ""
     for i in range(0, len(result)):
         res.append(result[i])
         s = "".join(res[-1])
@@ -107,25 +95,32 @@ def main(width):
             if int(s[pos]) == 1:
                 index = pos
                 break
-        for j in range(63 - index):
-            res.append([zero]*8)
-        # print(s)
-        # print(63 - index)
-    # pprint.pprint(res, width=128)
-    r = []
-    for i in range(1, len(res)):
-        r.append("".join(res[i]))
-
-    # pprint.pprint(r)
+        r += s[index:][::-1]
     print(len(r))
     return len(r), r
 
+
+def compress(width: int, data: str):
+    new_width = width - 21
+    new_data = data[:new_width]
+    return new_width, new_data, data[new_width:]
 
 if __name__ == "__main__":
 
     count_of_passengers = 1
     print(count_of_passengers)
-    lr1, r1 = main(width=count_of_passengers)
-    lr2, r2 = main(width=lr1)
+    lr1, r1 = extension(width=count_of_passengers)
+    pprint.pprint(r1)
+    c0, c1 = 0, 0
+    for i in r1:
+        if i == '0':
+            c0 += 1
+        else:
+            c1 += 1
+    # print(c0, c1)
+    lr2, r2, _ = compress(width=lr1, data=r1)
+    print(lr2)
+    pprint.pprint(r2)
+    lr3, r3 = extension(width=lr2)
 
     # zero_paths(name=0, width=32)
