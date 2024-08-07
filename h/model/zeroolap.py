@@ -75,6 +75,7 @@ def main(maximum: int):
         result.append(paths)
         assert paths
     pprint.pprint(result, width=len(result[-1]) ** 2 - len(result[-1][-1]) ** 2)
+    print(len(result), len(result[-1]), len(result[-1][1]), result[-1][-1][-1])
         # print(paths)
         # if type(paths[0]) is list:
             # (paths[-1][-1] == limit):
