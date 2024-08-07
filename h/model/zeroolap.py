@@ -118,31 +118,14 @@ def main(width):
 
     # pprint.pprint(r)
     print(len(r))
-    # print(r[-7:-6][0][-16:])
-    return len(r)
+    return len(r), r
 
 
 if __name__ == "__main__":
-    # i = 1
-    # while True:
-    #     s = 0
-    #     for k in range(1, i + 1):
-    #         s += (32 * (6 ** k)) * (2 ** i)
-    #     try:
-    #         s = s ** (1/i)
-    #     except OverflowError:
-    #         break
-    #     i += 1
-    #     result_i = i
-    #     result_s = round(s) + 1
-    #     # print(i, s)
-    # print(result_s, result_i)
 
     count_of_passengers = 1
-    while True:
-        old_count = count_of_passengers
-        count_of_passengers = main(width=count_of_passengers)
-        if old_count == count_of_passengers:
-            break
-    print(old_count)
+    print(count_of_passengers)
+    lr1, r1 = main(width=count_of_passengers)
+    lr2, r2 = main(width=lr1)
+
     # zero_paths(name=0, width=32)
