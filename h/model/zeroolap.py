@@ -81,22 +81,25 @@ def extension(width):
         if len_result > max_len:
             max_len = len_result
     for i in range(len(result)):
-        result[i] = [0] * (8 - len(result[i])) + result[i]
+        result[i] = [0] * (7 - len(result[i])) + result[i]
         for j in range(len(result[i])):
             x = result[i][j]
-            result[i][j] = f"{x:8b}".replace(' ', '0')
+            result[i][j] = [0] * 2 + [x]
+
     res = []
-    r = ""
-    for i in range(0, len(result)):
-        res.append(result[i])
-        s = "".join(res[-1])
-        index = 0
-        for pos in range(64):
-            if int(s[pos]) == 1:
-                index = pos
-                break
-        r += s[index:][::-1]
+    r = []
+    # for i in range(0, len(result)):
+    #     res.append(result[i])
+    #     s = "".join(res[-1])
+    #     index = 0
+    #     for pos in range(64):
+    #         if int(s[pos]) == 1:
+    #             index = pos
+    #             break
+    #     r += s[index:][::-1]
     print(len(r))
+    pprint.pprint(result, width=21*22)
+    sys.exit()
     return len(r), r
 
 
@@ -105,10 +108,10 @@ def compress(width: int, data: str, number: int):
     summa = 0
     for i in range(number, -1, -1):
         summa += (22 - 1) ** i
-    summa2 = 0
-    for i in range(number):
-        summa2 += (22 - 1) ** i
-    summa -= summa2
+    # summa2 = 0
+    # for i in range(number):
+    #     summa2 += (22 - 1) ** i
+    # summa -= summa2
     new_width -= summa
     new_data = data[:new_width]
     return new_width, new_data, data[new_width:]
