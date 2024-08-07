@@ -83,27 +83,33 @@ def extension(width):
     for i in range(len(result)):
         result[i] = [0] * (7 - len(result[i])) + result[i]
         for j in range(len(result[i])):
-            x = f"{result[i][j]:5b}".replace(' ', '0')
-            result[i][j] = "".join((['00000'] * 2 + [x]))
+            x = f"{result[i][j]:7b}".replace(' ', '0')
+            result[i][j] = "".join((['0000000'] * 2 + [x]))
         result[i] = "".join(result[i])
-    # print(f"\n".join(result))
-    res = []
+    # pprint.pprint(result)
+    # sys.exit()
     r = []
     for i in range(0, len(result)):
         s = "".join(result[i])
         index = s.find('1')
         r.append(s)
-        index = 21 * 5 - index - 1
+        index = 21 * 7 - index - 1
+        # print(index)
         for j in range(index):
-            r.append("".join((['0'] * (21 * 5))))
+            r.append("".join((['0'] * (21 * 7))))
+    # pprint.pprint(r, width=21*7*3)
+    # sys.exit()
     return len(r), r
 
 
-def compress(width: int, data: str, number: int):
+def zero_compress(width: int, data: str, number: int):
     new_width = width
-    while new_width > 22:
-        new_width -= 21
-        data_left = data[:22]
+    for i in range(3):
+        src = new_width
+        dsc = new_width - 7*7
+
+        new_width -= 7*7
+
 
     new_data = data[:new_width]
     return new_width, new_data, data[new_width:]
@@ -117,7 +123,7 @@ if __name__ == "__main__":
         lr1, r1 = extension(width=count_of_passengers)
         # pprint.pprint(r1)
         print(lr1)
-        new_width, new_data, data = compress(width=lr1, data="".join(r1), number=number)
+        new_width, new_data, data = zero_compress(width=lr1, data="".join(r1), number=number)
         print(number, len(new_data))
         break
         number += 1
