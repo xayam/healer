@@ -76,18 +76,20 @@ def main(width):
     limit = zero_limit(width)
     for width in list(range(1, limit)) + list(range(width, limit, -1)):
         paths = zero_paths(width=width, verbose=0)
-        result.append(paths)
+        result.append(paths[-1])
         len_result = len(result[-1])
         if len_result > max_len:
             max_len = len_result
-    pprint.pprint(result, width=8*(len(result) ** 2 - len(result[-1]) ** 2))
+    for i in range(len(result)):
+        result[i] = [0] * (7 - len(result[i])) + result[i]
+    result.append([0, 0, 0, 0, 0, 0, limit])
+    pprint.pprint(result)
+    print(len(result))
     return max_len
 
 
-
-
 if __name__ == "__main__":
-    passegers = 32
+    passegers = 66
     maximum = 0
     for w in range(passegers, passegers + 1):
         m = main(width=w)
