@@ -96,18 +96,16 @@ def extension(width):
         index = s.find('1')
         r.append(s)
         index = 21 * 7 - index - 1
-        # print(index)
         for j in range(index):
             r.append("".join((['0'] * (21 * 7))))
-    # pprint.pprint(r, width=21*7*3)
-    # sys.exit()
     return len(r), r
 
 
 def zero_compress(width: int, data: str, number: int):
     new_width = width
     i = 0
-    while True:
+    dsc = new_width
+    while math.ceil(dsc) >= 38:
         src = new_width
         dsc = new_width
         for j in range(0, i):
@@ -118,6 +116,7 @@ def zero_compress(width: int, data: str, number: int):
             if math.ceil(dsc) >= 38:
                 winsound.Beep(math.ceil(dsc) - 1, 21)
         i += 1
+        print(dsc)
 
 
         new_width -= 7*7
