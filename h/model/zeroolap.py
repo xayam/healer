@@ -82,13 +82,13 @@ def main(width):
             max_len = len_result
     for i in range(len(result)):
         result[i] = [0] * (7 - len(result[i])) + result[i]
-    # result.append([0, 0, 0, 0, 0, 0, limit])
+    result.append([0, 0, 0, 0, limit, limit, limit])
     pprint.pprint(result)
     print(len(result))
     return max_len
 
 
 if __name__ == "__main__":
-    count_of_passengers = 64
+    count_of_passengers = 32
     main(width=count_of_passengers)
     # zero_paths(name=0, width=32)
