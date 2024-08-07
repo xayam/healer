@@ -82,7 +82,7 @@ def main(width):
             max_len = len_result
     for i in range(len(result)):
         result[i] = [0] * (7 - len(result[i])) + result[i]
-    result.append([0, 0, 0, 0, limit, limit, limit])
+    result.append([0, 0, 0, 0, 0, limit - 1, limit])
     pprint.pprint(result)
     print(len(result))
     return max_len
