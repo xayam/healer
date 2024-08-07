@@ -3,6 +3,8 @@ import pprint
 import sys
 from functools import reduce
 
+import winsound
+
 from model.utils import progress
 
 
@@ -104,9 +106,20 @@ def extension(width):
 
 def zero_compress(width: int, data: str, number: int):
     new_width = width
-    for i in range(3):
+    i = 0
+    while True:
         src = new_width
-        dsc = new_width - 7*7
+        dsc = new_width
+        for j in range(0, i):
+            dsc -= 7 ** j
+            dsc = dsc / 3
+            if math.floor(dsc) == 0:
+                winsound.Beep(math.ceil(dsc), 22)
+            else:
+                dsc = round(dsc)
+                break
+        i += 1
+
 
         new_width -= 7*7
 
