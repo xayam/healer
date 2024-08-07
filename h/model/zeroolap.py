@@ -89,20 +89,37 @@ def main(width):
     limit_1 = limit - 1
     limit_1 = f"{limit_1:8b}".replace(' ', '0')
     limit = f"{limit:8b}".replace(' ', '0')
-    result.append([zero, zero, zero, zero, zero, zero, limit_1, limit])
-    res = [[]]
+    # s = "".join(result[0])
+    # print(result)
+    # index = 0
+    # for pos in range(64):
+    #     if int(s[pos]) == 1:
+    #         index = pos
+    #         break
+    # if index != 0:
+    #     result.append([*[zero]*(64 - index), limit_1, limit])
+    res = []
     for i in range(0, len(result)):
         res.append(result[i])
-        for j in range(6):
+        s = "".join(res[-1])
+        index = 0
+        for pos in range(64):
+            if int(s[pos]) == 1:
+                index = pos
+                break
+        for j in range(63 - index):
             res.append([zero]*8)
+        # print(s)
+        # print(63 - index)
+    # pprint.pprint(res, width=128)
     r = []
-    for i in range(len(res)):
+    for i in range(1, len(res)):
         r.append("".join(res[i]))
 
-    pprint.pprint(r)
-    print(len(result))
-    print(r[-7:-6][0][-16:])
-    return max_len
+    # pprint.pprint(r)
+    print(len(r))
+    # print(r[-7:-6][0][-16:])
+    return len(r)
 
 
 if __name__ == "__main__":
@@ -121,6 +138,11 @@ if __name__ == "__main__":
     #     # print(i, s)
     # print(result_s, result_i)
 
-    count_of_passengers = 32
-    main(width=count_of_passengers)
+    count_of_passengers = 1
+    while True:
+        old_count = count_of_passengers
+        count_of_passengers = main(width=count_of_passengers)
+        if old_count == count_of_passengers:
+            break
+    print(old_count)
     # zero_paths(name=0, width=32)
