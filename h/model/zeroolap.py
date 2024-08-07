@@ -106,6 +106,21 @@ def main(width):
 
 
 if __name__ == "__main__":
+    # i = 1
+    # while True:
+    #     s = 0
+    #     for k in range(1, i + 1):
+    #         s += (32 * (6 ** k)) * (2 ** i)
+    #     try:
+    #         s = s ** (1/i)
+    #     except OverflowError:
+    #         break
+    #     i += 1
+    #     result_i = i
+    #     result_s = round(s) + 1
+    #     # print(i, s)
+    # print(result_s, result_i)
+
     count_of_passengers = 32
     main(width=count_of_passengers)
     # zero_paths(name=0, width=32)
