@@ -3,6 +3,8 @@ import pprint
 import sys
 from functools import reduce
 
+from model.utils import progress
+
 
 def zero_limit(width=32) -> int:
     assert width > 0
@@ -71,14 +73,16 @@ def main(maximum: int):
     for width in range(1, maximum):
         paths = zero_paths(width=width, verbose=0)
         result.append(paths[-1][1:])
-    pprint.pprint(result)
+        progress(f"{width}/{maximum}, {len(result)}, {len(result[1])}")
+    # pprint.pprint(result)
     assert len(result) == maximum - 1
-    print(len(result))
+    # print(maximum, len(result), len(result[1]))
 
 
 
 
 if __name__ == "__main__":
-    main(maximum=22)
+    for m in range(2**32, 2**32-1):
+        main(maximum=m)
 
     # zero_paths(name=0, width=32)
