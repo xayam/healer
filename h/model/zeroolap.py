@@ -112,12 +112,11 @@ def zero_compress(width: int, data: str, number: int):
         dsc = new_width
         for j in range(0, i):
             dsc -= 7 ** j
-            dsc = dsc / 3
-            if math.floor(dsc) == 0:
-                winsound.Beep(math.ceil(dsc), 22)
-            else:
-                dsc = round(dsc)
-                break
+            if math.ceil(dsc) >= 38:
+                winsound.Beep(math.ceil(dsc) - 1, 21)
+            dsc = dsc // 3
+            if math.ceil(dsc) >= 38:
+                winsound.Beep(math.ceil(dsc) - 1, 21)
         i += 1
 
 
