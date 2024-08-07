@@ -89,11 +89,6 @@ def main(width):
 
 
 if __name__ == "__main__":
-    passegers = 66
-    maximum = 0
-    for w in range(passegers, passegers + 1):
-        m = main(width=w)
-        if m > maximum:
-            maximum = m
-            # progress(f"{w} {maximum}")
+    count_of_passengers = 64
+    main(width=count_of_passengers)
     # zero_paths(name=0, width=32)
