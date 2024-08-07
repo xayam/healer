@@ -100,8 +100,8 @@ def extension(width):
     return len(r), r
 
 
-def compress(width: int, data: str):
-    new_width = width - 21
+def compress(width: int, data: str, number: int):
+    new_width = width - (22 - 1) ** number
     new_data = data[:new_width]
     return new_width, new_data, data[new_width:]
 
@@ -109,18 +109,17 @@ if __name__ == "__main__":
 
     count_of_passengers = 1
     print(count_of_passengers)
-    lr1, r1 = extension(width=count_of_passengers)
-    pprint.pprint(r1)
-    c0, c1 = 0, 0
-    for i in r1:
-        if i == '0':
-            c0 += 1
-        else:
-            c1 += 1
-    # print(c0, c1)
-    lr2, r2, _ = compress(width=lr1, data=r1)
-    print(lr2)
-    pprint.pprint(r2)
-    lr3, r3 = extension(width=lr2)
+    number = 1
+    while True:
+        lr1, r1 = extension(width=count_of_passengers)
+        pprint.pprint(r1)
+        c0, c1 = 0, 0
+        for i in r1:
+            if i == '0':
+                c0 += 1
+            else:
+                c1 += 1
+        lr2, r2, _ = compress(width=lr1, data=r1, number=number)
+        number += 1
 
     # zero_paths(name=0, width=32)
