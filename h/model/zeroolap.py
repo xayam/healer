@@ -70,23 +70,15 @@ def main(maximum: int):
     result = []
     for width in range(1, maximum):
         paths = zero_paths(width=width, verbose=0)
-        result.append(paths)
-    result = [[[0, 0]]] + result
-    pprint.pprint(result, width=8 * (len(result[-1]) ** 2 - len(result[-1][-1]) ** 2))
-    print(len(result), len(result[-1]), len(result[-1][1]), result[-1][-1][-1])
-        # print(paths)
-        # if type(paths[0]) is list:
-            # (paths[-1][-1] == limit):
-            # (len(paths[0]) > 2) and \
-            # (paths[0][0] == 0) and \
-            # assert len(paths[0]) - len(set(paths[0])) == 1
-            # continue
-        # if not type(paths[0]) is list:
-        #     assert len(paths) - len(set(paths)) == 1
+        result.append(paths[-1])
+    pprint.pprint(result)
+    assert len(result) == maximum - 1
+    print(len(result))
+
 
 
 
 if __name__ == "__main__":
-    main(maximum=64)
+    main(maximum=32)
 
     # zero_paths(name=0, width=32)
