@@ -52,10 +52,9 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
             len_paths = len(paths)
             len_set_paths = len(set(paths))
             assert len_paths - len_set_paths == 1
-            result.append(paths)
+            result.append([0, 0] + paths)
         if verbose > 0:
             pprint.pprint(result)
-        assert len(result) == width
         return result
     else:
         paths = zero_get_new_name(name)
@@ -64,17 +63,16 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
         if verbose > 0:
             print(paths, len_paths, len_set_paths)
         assert len_paths - len_set_paths == 1
-        return paths
+        return result + paths
 
 
 def main(maximum: int):
     result = []
     for width in range(1, maximum):
-        limit = zero_limit(width)
         paths = zero_paths(width=width, verbose=0)
         result.append(paths)
-        assert paths
-    pprint.pprint(result, width=len(result[-1]) ** 2 - len(result[-1][-1]) ** 2)
+    result = [[[0, 0]]] + result
+    pprint.pprint(result, width=8 * (len(result[-1]) ** 2 - len(result[-1][-1]) ** 2))
     print(len(result), len(result[-1]), len(result[-1][1]), result[-1][-1][-1])
         # print(paths)
         # if type(paths[0]) is list:
