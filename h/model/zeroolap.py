@@ -81,9 +81,16 @@ def main(width):
         if len_result > max_len:
             max_len = len_result
     for i in range(len(result)):
-        result[i] = [0] * (7 - len(result[i])) + result[i]
-    result.append([0, 0, 0, 0, 0, limit - 1, limit])
-    pprint.pprint(result)
+        result[i] = [0] * (8 - len(result[i])) + result[i]
+        for j in range(len(result[i])):
+            x = result[i][j]
+            result[i][j] = f"{x:8b}".replace(' ', '0')
+    zero = '0' * 8
+    limit_1 = limit - 1
+    limit_1 = f"{limit_1:8b}".replace(' ', '0')
+    limit = f"{limit:8b}".replace(' ', '0')
+    result.append([zero, zero, zero, zero, zero, zero, limit_1, limit])
+    pprint.pprint(result, width=2 ** 8)
     print(len(result))
     return max_len
 
