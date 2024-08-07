@@ -90,7 +90,16 @@ def main(width):
     limit_1 = f"{limit_1:8b}".replace(' ', '0')
     limit = f"{limit:8b}".replace(' ', '0')
     result.append([zero, zero, zero, zero, zero, zero, limit_1, limit])
-    pprint.pprint(result, width=2 ** 8)
+    res = [[]]
+    for i in range(0, len(result)):
+        res.append(result[i])
+        for j in range(6):
+            res.append([zero]*8)
+    r = []
+    for i in range(len(res)):
+        r.append("".join(res[i]))
+
+    pprint.pprint(r)
     print(len(result))
     return max_len
 
