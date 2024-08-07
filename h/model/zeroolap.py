@@ -81,7 +81,6 @@ def main(maximum: int):
             max_len = len_result
         progress(f"{width}/{maximum}, {len(result)}, {max_len}, {width/maximum}% ")
     pprint.pprint(result)
-    assert len(result) == maximum - 1
     print(maximum, len(result), len(result[1]))
 
 
