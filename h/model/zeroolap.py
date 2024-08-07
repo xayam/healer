@@ -52,7 +52,7 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
             len_paths = len(paths)
             len_set_paths = len(set(paths))
             assert len_paths - len_set_paths == 1
-            result.append([0, 0] + paths)
+            result.append(paths)
         if verbose > 0:
             pprint.pprint(result)
         return result
@@ -70,7 +70,7 @@ def main(maximum: int):
     result = []
     for width in range(1, maximum):
         paths = zero_paths(width=width, verbose=0)
-        result.append(paths[-1])
+        result.append(paths[-1][1:])
     pprint.pprint(result)
     assert len(result) == maximum - 1
     print(len(result))
@@ -79,6 +79,6 @@ def main(maximum: int):
 
 
 if __name__ == "__main__":
-    main(maximum=32)
+    main(maximum=22)
 
     # zero_paths(name=0, width=32)
