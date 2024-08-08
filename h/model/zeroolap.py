@@ -127,14 +127,17 @@ def zero_put_olap(key, value) -> bool:
     return True
 
 
-def main() -> None:
+def main() -> bool:
     olap, indexes = zero_olap_indexes()
     variants = [variant for variant in range(23, 1025)]
     while True:
         key = random.choice(variants)
+        variants.__delitem__(key)
         value = zero_get_olap_destination(olap=olap, indexes=indexes, name=key)
         success = zero_put_olap(key, value)
-
+        if not variants:
+            break
+    return success
 
 if __name__ == "__main__":
     main()
