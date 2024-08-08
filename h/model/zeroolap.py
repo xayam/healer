@@ -1,16 +1,9 @@
 import math
 import pprint
 import random
-import sys
-
 from typing import Tuple
 
-from model import *
 from model.utils import beep, convert_base
-
-
-# import sys
-# from functools import reduce
 
 
 def zero_limit(width=32) -> int:
@@ -138,6 +131,7 @@ def main() -> bool:
         if not variants:
             break
     return success
+
 
 if __name__ == "__main__":
     main()
