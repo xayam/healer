@@ -133,7 +133,7 @@ def zero_i_want_to_come_back(olap, indexes,
     return you_can_back, error, route
 
 
-def main_test(maximum=22 + 1):
+def main_test():
     olap, indexes = zero_olap_indexes()
     level = 1
     name = 22 + 1
@@ -157,4 +157,4 @@ def main_test(maximum=22 + 1):
 
 
 if __name__ == "__main__":
-    main_test(maximum=22 + 1)
+    main_test()
