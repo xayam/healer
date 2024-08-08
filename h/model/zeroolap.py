@@ -1,6 +1,9 @@
 import math
 import pprint
+import random
 import sys
+
+from typing import Tuple
 
 from model import *
 from model.utils import beep, convert_base
@@ -66,7 +69,7 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
             pprint.pprint(result)
         return result
     else:
-        # beep(name)
+        # beep(key)
         paths = zero_get_new_name(name)
         len_paths = len(paths)
         len_set_paths = len(set(paths))
@@ -76,7 +79,8 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
         return result + paths
 
 
-def zero_extension(name, number):
+def zero_olap_indexes() -> Tuple[list, list]:
+    name = 1
     buffer = []
     limit = zero_limit(name)
     for name in list(range(1, limit)) + list(range(name + 1, limit, -1)):
@@ -87,28 +91,20 @@ def zero_extension(name, number):
         for j in range(len(buffer[i])):
             buffer[i][j] = "".join((['0000000'] * 6 + [f"{buffer[i][j]:7b}".replace(' ', '0')]))
         buffer[i] = "".join(buffer[i])
-    result = []
+    olap = []
     indexes = []
     for i in range(len(buffer)):
         row = "".join(buffer[i])
         index = row.find('1')
         if index < 0:
             continue
-        result.append(row)
+        olap.append(row)
         index = 7 ** 3 - index - 1
         indexes.append(index)
-    result[-1] = '0' * (7 ** 3 - 5) + '11011'
-    result = ['0' * (7 ** 3)] + result
+    olap[-1] = '0' * (7 ** 3 - 5) + '11011'
+    olap = ['0' * (7 ** 3)] + olap
     indexes = [1] + indexes
-    # print(len(result))
-    print("\n".join(result))
-    # print(len(indexes))
-    # print(f"indexes={indexes}")
-
-    # pprint.pprint(result)
-    # to do find target point
-    sys.exit()
-    return 1, result
+    return olap, indexes
 
 
 def zero_return(width: int, data: str, number: int):
@@ -122,18 +118,23 @@ def zero_return(width: int, data: str, number: int):
     new_data = data[:new_width]
     return new_width, new_data, data[new_width:]
 
-if __name__ == "__main__":
 
-    count_of_passengers = 1
-    print(count_of_passengers)
-    number = 1
+def zero_get_olap_destination(olap, indexes, name: int) -> int:
+    return name
+
+
+def zero_put_olap(key, value) -> bool:
+    return True
+
+
+def main() -> None:
+    olap, indexes = zero_olap_indexes()
+    variants = [variant for variant in range(23, 1025)]
     while True:
-        # beep(count_of_passengers)
-        lr1, r1 = zero_extension(name=count_of_passengers, number=number)
+        key = random.choice(variants)
+        value = zero_get_olap_destination(olap=olap, indexes=indexes, name=key)
+        success = zero_put_olap(key, value)
 
-        _, new_data, _ = zero_return(width=lr1, data="".join(r1), number=number)
-        print(number, lr1, len(new_data))
-        number += 1
-        count_of_passengers = len(new_data)
 
-    # zero_paths(name=0, name=32)
+if __name__ == "__main__":
+    main()

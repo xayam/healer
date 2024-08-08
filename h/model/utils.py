@@ -54,7 +54,7 @@ def sign_of_subtraction_of_two_one_bits(_a, _b):
 
 def get_annotation() -> str:
     return """
-w - name, длина входной последовательности
+w - key, длина входной последовательности
 
 9 <-> 6 конфлииктующие числа в десятичной записи
 
