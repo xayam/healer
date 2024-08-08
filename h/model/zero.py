@@ -2,6 +2,7 @@ import math
 import pprint
 import random
 import sys
+from time import sleep
 from typing import Tuple
 
 from model.utils import beep, convert_base
@@ -94,6 +95,11 @@ def zero_olap_indexes() -> Tuple[list, list]:
     olap[-1] = '0' * (7 ** 3 - 5) + '11011'
     olap = ['0' * (7 ** 3)] + olap
     indexes = [1] + indexes
+
+    print("\n".join(olap))
+    print(indexes)
+    sys.exit()
+
     return olap, indexes
 
 
@@ -105,16 +111,7 @@ def zero_olap_put(key, value) -> bool:
     return True
 
 
-def zero_key_get(name) -> int:
-
-    return 1
-
-
-def zero_i_want_to_come_back(olap, indexes, name: int, number: int):
-    key = zero_key_get(name)
-    value = zero_olap_get(olap=olap, indexes=indexes, key=key)
-    success = zero_olap_put(key, value)
-
+def zero_key_get(name: int, number: int) -> int:
     # name = convert_base(name, number, 10)
     # new_width = int(name, number)
     # print(new_width)
@@ -124,19 +121,39 @@ def zero_i_want_to_come_back(olap, indexes, name: int, number: int):
     # new_width += number + number
     # new_data = data[:new_width]
     # return new_width, new_data, data[new_width:]
+    value = 1
+    return value
+
+
+def zero_i_want_to_come_back(olap, indexes,
+                             name: int, number: int) -> Tuple[bool, int, list, list]:
+    key = zero_key_get(name, number)
+    value = zero_olap_get(olap=olap, indexes=indexes, key=key)
+    you_can_back, error, route, schedule = zero_olap_put(key, value)
+    return you_can_back, error, route, schedule
 
 
 def main_test(maximum=22 + 1) -> bool:
     olap, indexes = zero_olap_indexes()
-    variants = [variant for variant in range(22 + 1, maximum + 1)]
+    number = 1
+    name = 22 + 1
     while True:
-        key = random.choice(variants)
-        variants.__delitem__(key)
-        zero_i_want_to_come_back(
+
+        i_can_return, error, route, schedule = zero_i_want_to_come_back(
             olap=olap, indexes=indexes,
-            name=1, number=1
+            name=name, number=number
         )
-        if not variants:
+        if i_can_return and (error == 0):
+            if (len(route) == 1) and (name == route[0]):
+                sleep(1)
+                continue
+            else:
+                for target in route[1:]:
+                   zero_path_get(target)
+            # to do
+            # schedule schedule
+            number -= 1
+        else:
             break
     return True
 
