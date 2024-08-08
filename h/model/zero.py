@@ -112,13 +112,13 @@ def zero_olap_put(key, value) -> bool:
 
 
 def zero_key_get(name: int, number: int) -> int:
-    # name = convert_base(name, number, 10)
-    # new_width = int(name, number)
+    # name = convert_base(name, level, 10)
+    # new_width = int(name, level)
     # print(new_width)
     # zero_limit(new_width)
-    # while new_width > number:
-    #     new_width -= number
-    # new_width += number + number
+    # while new_width > level:
+    #     new_width -= level
+    # new_width += level + level
     # new_data = data[:new_width]
     # return new_width, new_data, data[new_width:]
     value = 1
@@ -126,36 +126,35 @@ def zero_key_get(name: int, number: int) -> int:
 
 
 def zero_i_want_to_come_back(olap, indexes,
-                             name: int, number: int) -> Tuple[bool, int, list]:
-    key = zero_key_get(name, number)
+                             name: int, level: int) -> Tuple[bool, int, list]:
+    key = zero_key_get(name, level)
     value = zero_olap_get(olap=olap, indexes=indexes, key=key)
     you_can_back, error, route = zero_olap_put(key, value)
     return you_can_back, error, route
 
 
-def main_test(maximum=22 + 1) -> bool:
+def main_test(maximum=22 + 1):
     olap, indexes = zero_olap_indexes()
-    number = 1
+    level = 1
     name = 22 + 1
     while True:
 
         i_can_return, error, route = zero_i_want_to_come_back(
             olap=olap, indexes=indexes,
-            name=name, number=number
+            name=name, level=level
         )
         if i_can_return and (error == 0):
             for target in route:
                 if target == name:
-                    sleep(1)
+                    sleep(level)
                     continue
                 else:
                     name = target
-                    number -= 1
+                    # level -= 1
         else:
-            break
-    return True
+            name = zero_rename(name, name)
+            level += 1
 
 
 if __name__ == "__main__":
-    result = main_test(maximum=22 + 1)
-    sys.exit(int(result))
+    main_test(maximum=22 + 1)
