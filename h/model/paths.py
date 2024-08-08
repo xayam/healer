@@ -1,11 +1,12 @@
 import math
 import pprint
 
-from model.zero import zero_limit, zero_rename
+from model.zero import zero_rename
+from model.key import key_limit
 
 
 def paths_path_get(name: int = 0, width: int = 32) -> list:
-    limit = zero_limit(width)
+    limit = key_limit(width)
     assert name >= 0
     passenger = name
     paths = [0]
