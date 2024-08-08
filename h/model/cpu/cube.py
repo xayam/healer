@@ -1,18 +1,18 @@
 import sys
 from typing import Tuple
 
-from model.cpu.route import paths_paths
+from model.cpu.router import paths_paths
 
 
-def olap_get(olap, indexes, key: int) -> int:
+def cube_get(olap, indexes, key: int) -> int:
     return key
 
 
-def olap_put(key, value) -> bool:
+def cube_put(key, value) -> bool:
     return True
 
 
-def olap_indexes(width) -> Tuple[list, list]:
+def cube_indexes(width) -> Tuple[list, list]:
     buffer = []
     # limit = key_limit(name)
     # sys.exit()

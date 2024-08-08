@@ -2,8 +2,8 @@ from time import sleep
 from typing import Tuple
 
 from model.cpu.key import key_get
-from model.cpu.olap import olap_get, olap_put, olap_indexes
-from model.cpu.route import paths_path_get, route_level_up
+from model.cpu.cube import cube_get, cube_put, cube_indexes
+from model.cpu.router import paths_path_get, route_level_up
 
 
 def zero_rename(old_name: int, width=32) -> list:
@@ -13,13 +13,13 @@ def zero_rename(old_name: int, width=32) -> list:
 def zero_i_want_to_come_back(olap, indexes,
                              name: int, level: int) -> Tuple[bool, int, list]:
     key = key_get(name, level)
-    value = olap_get(olap=olap, indexes=indexes, key=key)
-    you_can_back, error, route = olap_put(key, value)
+    value = cube_get(olap=olap, indexes=indexes, key=key)
+    you_can_back, error, route = cube_put(key, value)
     return you_can_back, error, route
 
 
 def zero_test(width):
-    olap, indexes = olap_indexes(width=width)
+    olap, indexes = cube_indexes(width=width)
     level = 1
     name = 22 + 1
     while True:
