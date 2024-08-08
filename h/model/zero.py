@@ -1,6 +1,7 @@
 import math
 import pprint
 import random
+import sys
 from typing import Tuple
 
 from model.utils import beep, convert_base
@@ -18,7 +19,7 @@ def zero_limit(width=32) -> int:
     return limit
 
 
-def zero_get_path_by_name(name: int = 0, width: int = 32) -> list:
+def zero_path_get(name: int = 0, width: int = 32) -> list:
     limit = zero_limit(width)
     assert name >= 0
     passenger = name
@@ -41,9 +42,9 @@ def zero_get_path_by_name(name: int = 0, width: int = 32) -> list:
     return paths
 
 
-def zero_get_new_name(old_name: int, width=32) -> list:
+def zero_rename(old_name: int, width=32) -> list:
     # beep(old_name)
-    return [old_name] + zero_get_path_by_name(old_name, width)
+    return [old_name] + zero_path_get(old_name, width)
 
 
 def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
@@ -53,7 +54,7 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
     if name == 0:
         for i in range(width):
             # beep(i)
-            paths = zero_get_new_name(i)
+            paths = zero_rename(i)
             len_paths = len(paths)
             len_set_paths = len(set(paths))
             assert len_paths - len_set_paths == 1
@@ -63,7 +64,7 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
         return result
     else:
         # beep(key)
-        paths = zero_get_new_name(name)
+        paths = zero_rename(name)
         len_paths = len(paths)
         len_set_paths = len(set(paths))
         if verbose > 0:
@@ -100,38 +101,50 @@ def zero_olap_indexes() -> Tuple[list, list]:
     return olap, indexes
 
 
-def zero_return(width: int, data: str, number: int):
-    width = convert_base(width, number, 10)
-    new_width = int(width, number)
-    print(new_width)
-    zero_limit(new_width)
-    while new_width > number:
-        new_width -= number
-    new_width += number + number
-    new_data = data[:new_width]
-    return new_width, new_data, data[new_width:]
+def zero_olap_get(olap, indexes, key: int) -> int:
+    return key
 
 
-def zero_get_olap_destination(olap, indexes, name: int) -> int:
-    return name
-
-
-def zero_put_olap(key, value) -> bool:
+def zero_olap_put(key, value) -> bool:
     return True
 
 
-def main() -> bool:
+def zero_key_get(name) -> int:
+
+    return 1
+
+
+def zero_i_want_to_come_back(olap, indexes, name: int, number: int):
+    key = zero_key_get(name)
+    value = zero_olap_get(olap=olap, indexes=indexes, key=key)
+    success = zero_olap_put(key, value)
+
+    # name = convert_base(name, number, 10)
+    # new_width = int(name, number)
+    # print(new_width)
+    # zero_limit(new_width)
+    # while new_width > number:
+    #     new_width -= number
+    # new_width += number + number
+    # new_data = data[:new_width]
+    # return new_width, new_data, data[new_width:]
+
+
+def main_test(maximum=22 + 1) -> bool:
     olap, indexes = zero_olap_indexes()
-    variants = [variant for variant in range(23, 1025)]
+    variants = [variant for variant in range(22 + 1, maximum + 1)]
     while True:
         key = random.choice(variants)
         variants.__delitem__(key)
-        value = zero_get_olap_destination(olap=olap, indexes=indexes, name=key)
-        success = zero_put_olap(key, value)
+        zero_i_want_to_come_back(
+            olap=olap, indexes=indexes,
+            name=1, number=1
+        )
         if not variants:
             break
-    return success
+    return True
 
 
 if __name__ == "__main__":
-    main()
+    result = main_test(maximum=22 + 1)
+    sys.exit(int(result))
