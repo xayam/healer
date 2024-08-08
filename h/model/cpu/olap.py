@@ -1,8 +1,7 @@
 import sys
 from typing import Tuple
 
-from model.key import key_limit
-from model.route import paths_paths
+from model.cpu.route import paths_paths
 
 
 def olap_get(olap, indexes, key: int) -> int:

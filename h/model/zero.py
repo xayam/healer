@@ -1,9 +1,9 @@
 from time import sleep
 from typing import Tuple
 
-from model.key import key_get
-from model.olap import olap_get, olap_put, olap_indexes
-from model.route import paths_path_get, route_level_up
+from model.cpu.key import key_get
+from model.cpu.olap import olap_get, olap_put, olap_indexes
+from model.cpu.route import paths_path_get, route_level_up
 
 
 def zero_rename(old_name: int, width=32) -> list:
@@ -42,4 +42,4 @@ def zero_test(width):
 
 
 if __name__ == "__main__":
-    zero_test(width=22 + 1)
+    zero_test(width=11 + 1)

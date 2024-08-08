@@ -1,8 +1,7 @@
 import math
 import pprint
-import sys
 
-from model.key import key_limit
+from model.cpu.key import key_limit
 
 
 def route_level_up(name, width):
