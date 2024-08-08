@@ -6,7 +6,7 @@ from time import sleep
 
 import winsound
 
-from model.utils import progress
+from model.utils import progress, convert_base
 
 
 def zero_limit(width=32) -> int:
@@ -17,6 +17,9 @@ def zero_limit(width=32) -> int:
         limit = 4 * math.ceil(math.log2(limit)) + 2
         if limit == old_limit:
             break
+        if limit > 36:
+            print(limit)
+            winsound.Beep(limit, 2)
     return limit
 
 
@@ -42,10 +45,16 @@ def zero_get_path_by_name(name: int = 0, width: int = 32) -> list:
         paths.append(destination)
         if destination == limit:
             break
+        if destination > 36:
+            print(destination)
+            winsound.Beep(destination, 2)
     return paths
 
 
 def zero_get_new_name(old_name: int, width=32) -> list:
+    if old_name > 36:
+        print(old_name)
+        winsound.Beep(old_name, 2)
     return [old_name] + zero_get_path_by_name(old_name, width)
 
 
@@ -55,6 +64,9 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
     result = []
     if name == 0:
         for i in range(width):
+            if i > 36:
+                print(i)
+                winsound.Beep(i, 2)
             paths = zero_get_new_name(i)
             len_paths = len(paths)
             len_set_paths = len(set(paths))
@@ -64,6 +76,9 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
             pprint.pprint(result)
         return result
     else:
+        if name > 36:
+            print(name)
+            winsound.Beep(name, 2)
         paths = zero_get_new_name(name)
         len_paths = len(paths)
         len_set_paths = len(set(paths))
@@ -76,18 +91,24 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
 def extension(width):
     result = []
     max_len = 0
+    if width > 36:
+        print(width)
+        winsound.Beep(width, 2)
     limit = zero_limit(width)
     for width in list(range(1, limit)) + list(range(width, limit, -1)):
+        if width > 36:
+            print(width)
+            winsound.Beep(width, 2)
         paths = zero_paths(width=width, verbose=0)
         result.append(paths[-1])
         len_result = len(result[-1])
         if len_result > max_len:
             max_len = len_result
     for i in range(len(result)):
-        result[i] = [0] * (7 - len(result[i])) + result[i]
+        result[i] = [0] * (2 - len(result[i])) + result[i]
         for j in range(len(result[i])):
-            x = f"{result[i][j]:7b}".replace(' ', '0')
-            result[i][j] = "".join((['0000000'] * 2 + [x]))
+            x = f"{result[i][j]:2b}".replace(' ', '0')
+            result[i][j] = "".join((['00'] * 1 + [x]))
         result[i] = "".join(result[i])
     # pprint.pprint(result)
     # sys.exit()
@@ -96,28 +117,27 @@ def extension(width):
         s = "".join(result[i])
         index = s.find('1')
         r.append(s)
-        index = 21 * 7 - index - 1
+        index = 7 ** 3 - index - 1
         for j in range(index):
-            r.append("".join((['0'] * (21 * 7))))
+            r.append("".join((['0'] * (7 ** 3))))
+    # print(r)
+    # sys.exit()
     return len(r), r
 
 
 def zero_compress(width: int, data: str, number: int):
-    new_width = width
-    i = 0
-    dsc = new_width
-    while new_width > 22:
-        dsc = new_width
-        for j in range(0, i):
-            dsc -= 7 ** j
-            winsound.Beep(37, 7 ** i - 7 ** j)
-        sleep(i/(7*3))
-            # winsound.Beep(37, 7 ** 3 - 7 ** j)
-            # dsc = dsc // 3
-            # winsound.Beep(37, 7 ** 3 - 7 ** j)
-        i += 1
-        print(dsc)
-        new_width -= 7*7
+    width = convert_base(width, 6, 10)
+    new_width = int(width, 6)
+    print(new_width)
+    while new_width > 0:
+        if new_width > 36:
+            print(new_width)
+            winsound.Beep(new_width, 2)
+        # sleep(i/(7*3))
+        # print(dsc)
+        # print(new_width)
+        new_width -= 6
+    new_width += 6 + number
     new_data = data[:new_width]
     return new_width, new_data, data[new_width:]
 
@@ -130,9 +150,9 @@ if __name__ == "__main__":
         lr1, r1 = extension(width=count_of_passengers)
         # pprint.pprint(r1)
         print(lr1)
-        new_width, new_data, data = zero_compress(width=lr1, data="".join(r1), number=number)
-        print(number, len(new_data))
         # break
+        _, new_data, _ = zero_compress(width=lr1, data="".join(r1), number=number)
+        print(number, len(new_data))
         number += 1
         count_of_passengers = len(new_data)
 
