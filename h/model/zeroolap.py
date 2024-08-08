@@ -2,7 +2,7 @@ import math
 import pprint
 
 from model import *
-from model.utils import beep
+from model.utils import beep, convert_base
 
 
 # import sys
