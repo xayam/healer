@@ -38,12 +38,10 @@ def zero_path_get(name: int = 0, width: int = 32) -> list:
         paths.append(destination)
         if destination == limit:
             break
-        beep(destination)
     return paths
 
 
 def zero_rename(old_name: int, width=32) -> list:
-    # beep(old_name)
     return [old_name] + zero_path_get(old_name, width)
 
 
@@ -53,7 +51,6 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
     result = []
     if name == 0:
         for i in range(width):
-            # beep(i)
             paths = zero_rename(i)
             len_paths = len(paths)
             len_set_paths = len(set(paths))
@@ -63,7 +60,6 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
             pprint.pprint(result)
         return result
     else:
-        # beep(key)
         paths = zero_rename(name)
         len_paths = len(paths)
         len_set_paths = len(set(paths))
