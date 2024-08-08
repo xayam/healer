@@ -3,6 +3,7 @@ import re
 import sys
 
 import colorama
+import winsound
 
 
 def progress(message: str) -> None:
@@ -99,3 +100,10 @@ def convert_base(num, to_base=10, from_base=10):
         return alphabet[n]
     else:
         return convert_base(n // to_base, to_base) + alphabet[n % to_base]
+
+
+def beep(freq, direction=2, verbose=1):
+    if freq > 36:
+        if verbose > 0:
+            print(f"freq={freq}, direction={direction}")
+        winsound.Beep(freq, direction)
