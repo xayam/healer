@@ -105,7 +105,7 @@ def zero_extension(name, number):
     # print(len(indexes))
     # print(f"indexes={indexes}")
 
-    pprint.pprint(result)
+    # pprint.pprint(result)
     # to do find target point
     sys.exit()
     return len(result), result
