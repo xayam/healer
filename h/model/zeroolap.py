@@ -2,6 +2,7 @@ import math
 import pprint
 import sys
 from functools import reduce
+from time import sleep
 
 import winsound
 
@@ -105,23 +106,18 @@ def zero_compress(width: int, data: str, number: int):
     new_width = width
     i = 0
     dsc = new_width
-    while math.ceil(dsc) >= 38:
-        src = new_width
+    while new_width > 22:
         dsc = new_width
         for j in range(0, i):
             dsc -= 7 ** j
-            if math.ceil(dsc) >= 38:
-                winsound.Beep(math.ceil(dsc) - 1, 21)
-            dsc = dsc // 3
-            if math.ceil(dsc) >= 38:
-                winsound.Beep(math.ceil(dsc) - 1, 21)
+            winsound.Beep(37, 7 ** i - 7 ** j)
+        sleep(i/(7*3))
+            # winsound.Beep(37, 7 ** 3 - 7 ** j)
+            # dsc = dsc // 3
+            # winsound.Beep(37, 7 ** 3 - 7 ** j)
         i += 1
         print(dsc)
-
-
         new_width -= 7*7
-
-
     new_data = data[:new_width]
     return new_width, new_data, data[new_width:]
 
@@ -136,7 +132,7 @@ if __name__ == "__main__":
         print(lr1)
         new_width, new_data, data = zero_compress(width=lr1, data="".join(r1), number=number)
         print(number, len(new_data))
-        break
+        # break
         number += 1
         count_of_passengers = len(new_data)
 
