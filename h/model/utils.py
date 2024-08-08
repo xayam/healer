@@ -54,7 +54,7 @@ def sign_of_subtraction_of_two_one_bits(_a, _b):
 
 def get_annotation() -> str:
     return """
-w - width, длина входной последовательности
+w - name, длина входной последовательности
 
 9 <-> 6 конфлииктующие числа в десятичной записи
 
@@ -103,7 +103,8 @@ def convert_base(num, to_base=10, from_base=10):
 
 
 def beep(freq, direction=2, verbose=1):
+    direction = freq
     if freq > 36:
         if verbose > 0:
             print(f"freq={freq}, direction={direction}")
-        winsound.Beep(freq, direction)
+        winsound.Beep(freq, duration=direction)

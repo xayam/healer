@@ -1,5 +1,6 @@
 import math
 import pprint
+import sys
 
 from model import *
 from model.utils import beep, convert_base
@@ -45,7 +46,7 @@ def zero_get_path_by_name(name: int = 0, width: int = 32) -> list:
 
 
 def zero_get_new_name(old_name: int, width=32) -> list:
-    beep(old_name)
+    # beep(old_name)
     return [old_name] + zero_get_path_by_name(old_name, width)
 
 
@@ -55,7 +56,7 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
     result = []
     if name == 0:
         for i in range(width):
-            beep(i)
+            # beep(i)
             paths = zero_get_new_name(i)
             len_paths = len(paths)
             len_set_paths = len(set(paths))
@@ -65,7 +66,7 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
             pprint.pprint(result)
         return result
     else:
-        beep(name)
+        # beep(name)
         paths = zero_get_new_name(name)
         len_paths = len(paths)
         len_set_paths = len(set(paths))
@@ -75,47 +76,49 @@ def zero_paths(name: int = 0, width: int = 32, verbose=0) -> list:
         return result + paths
 
 
-def extension(width):
+def zero_extension(name, number):
+    buffer = []
+    limit = zero_limit(name)
+    for name in list(range(1, limit)) + list(range(name + 1, limit, -1)):
+        paths = zero_paths(width=name, verbose=0)
+        buffer.append(paths[-1])
+    for i in range(len(buffer)):
+        buffer[i] = [0] * (7 - len(buffer[i])) + buffer[i]
+        for j in range(len(buffer[i])):
+            buffer[i][j] = "".join((['0000000'] * 6 + [f"{buffer[i][j]:7b}".replace(' ', '0')]))
+        buffer[i] = "".join(buffer[i])
     result = []
-    max_len = 0
-    beep(width)
-    limit = zero_limit(width)
-    for width in list(range(1, limit)) + list(range(width, limit, -1)):
-        beep(width)
-        paths = zero_paths(width=width, verbose=0)
-        result.append(paths[-1])
-        len_result = len(result[-1])
-        if len_result > max_len:
-            max_len = len_result
-    for i in range(len(result)):
-        beep(i)
-        result[i] = [0] * (2 - len(result[i])) + result[i]
-        for j in range(len(result[i])):
-            beep(j)
-            x = f"{result[i][j]:2b}".replace(' ', '0')
-            result[i][j] = "".join((['00'] * 1 + [x]))
-        result[i] = "".join(result[i])
-    r = []
-    for i in range(0, len(result)):
-        beep(i)
-        s = "".join(result[i])
-        index = s.find('1')
-        r.append(s)
+    indexes = []
+    for i in range(len(buffer)):
+        row = "".join(buffer[i])
+        index = row.find('1')
+        if index < 0:
+            continue
+        result.append(row)
         index = 7 ** 3 - index - 1
-        for j in range(index):
-            beep(index)
-            r.append("".join((['0'] * (7 ** 3))))
-    return len(r), r
+        indexes.append(index)
+    result[-1] = '0' * (7 ** 3 - 5) + '11011'
+    result = ['0' * (7 ** 3)] + result
+    indexes = [1] + indexes
+    # print(len(result))
+    # print(result)
+    # print(len(indexes))
+    # print(f"indexes={indexes}")
+
+    pprint.pprint(result)
+    # to do find target point
+    sys.exit()
+    return len(result), result
 
 
-def zero_compress(width: int, data: str, number: int):
-    width = convert_base(width, 6, 10)
-    new_width = int(width, 6)
+def zero_return(width: int, data: str, number: int):
+    width = convert_base(width, number, 10)
+    new_width = int(width, number)
     print(new_width)
-    while new_width > 0:
-        beep(new_width)
-        new_width -= 6
-    new_width += 6 + number
+    zero_limit(new_width)
+    while new_width > number:
+        new_width -= number
+    new_width += number + number
     new_data = data[:new_width]
     return new_width, new_data, data[new_width:]
 
@@ -125,12 +128,12 @@ if __name__ == "__main__":
     print(count_of_passengers)
     number = 1
     while True:
-        beep(count_of_passengers)
-        lr1, r1 = extension(width=count_of_passengers)
+        # beep(count_of_passengers)
+        lr1, r1 = zero_extension(name=count_of_passengers, number=number)
 
-        _, new_data, _ = zero_compress(width=lr1, data="".join(r1), number=number)
+        _, new_data, _ = zero_return(width=lr1, data="".join(r1), number=number)
         print(number, lr1, len(new_data))
         number += 1
         count_of_passengers = len(new_data)
 
-    # zero_paths(name=0, width=32)
+    # zero_paths(name=0, name=32)
