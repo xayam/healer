@@ -3,7 +3,7 @@ from typing import Tuple
 
 from model.key import key_get
 from model.olap import olap_get, olap_put, olap_indexes
-from model.paths import paths_path_get
+from model.route import paths_path_get
 
 
 def zero_rename(old_name: int, width=32) -> list:
