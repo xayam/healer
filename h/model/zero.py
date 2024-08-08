@@ -126,11 +126,11 @@ def zero_key_get(name: int, number: int) -> int:
 
 
 def zero_i_want_to_come_back(olap, indexes,
-                             name: int, number: int) -> Tuple[bool, int, list, list]:
+                             name: int, number: int) -> Tuple[bool, int, list]:
     key = zero_key_get(name, number)
     value = zero_olap_get(olap=olap, indexes=indexes, key=key)
-    you_can_back, error, route, schedule = zero_olap_put(key, value)
-    return you_can_back, error, route, schedule
+    you_can_back, error, route = zero_olap_put(key, value)
+    return you_can_back, error, route
 
 
 def main_test(maximum=22 + 1) -> bool:
@@ -139,20 +139,18 @@ def main_test(maximum=22 + 1) -> bool:
     name = 22 + 1
     while True:
 
-        i_can_return, error, route, schedule = zero_i_want_to_come_back(
+        i_can_return, error, route = zero_i_want_to_come_back(
             olap=olap, indexes=indexes,
             name=name, number=number
         )
         if i_can_return and (error == 0):
-            if (len(route) == 1) and (name == route[0]):
-                sleep(1)
-                continue
-            else:
-                for target in route[1:]:
-                   zero_path_get(target)
-            # to do
-            # schedule schedule
-            number -= 1
+            for target in route:
+                if target == name:
+                    sleep(1)
+                    continue
+                else:
+                    name = target
+                    number -= 1
         else:
             break
     return True
