@@ -101,14 +101,14 @@ def zero_extension(name, number):
     result = ['0' * (7 ** 3)] + result
     indexes = [1] + indexes
     # print(len(result))
-    # print(result)
+    print("\n".join(result))
     # print(len(indexes))
     # print(f"indexes={indexes}")
 
     # pprint.pprint(result)
     # to do find target point
     sys.exit()
-    return len(result), result
+    return 1, result
 
 
 def zero_return(width: int, data: str, number: int):
