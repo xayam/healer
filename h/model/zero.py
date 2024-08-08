@@ -3,7 +3,7 @@ from typing import Tuple
 
 from model.key import key_get
 from model.olap import olap_get, olap_put, olap_indexes
-from model.route import paths_path_get
+from model.route import paths_path_get, route_level_up
 
 
 def zero_rename(old_name: int, width=32) -> list:
@@ -18,7 +18,7 @@ def zero_i_want_to_come_back(olap, indexes,
     return you_can_back, error, route
 
 
-def zero_test(width=8):
+def zero_test(width):
     olap, indexes = olap_indexes(width=width)
     level = 1
     name = 22 + 1
@@ -37,9 +37,9 @@ def zero_test(width=8):
                     name = target
                     # level -= 1
         else:
-            name = zero_rename(name, name)
+            name = route_level_up(name)
             level += 1
 
 
 if __name__ == "__main__":
-    zero_test(width=8)
+    zero_test(width=22 + 1)

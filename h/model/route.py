@@ -1,8 +1,21 @@
 import math
 import pprint
+import sys
 
-from model.zero import zero_rename
 from model.key import key_limit
+
+
+def route_level_up(name, width):
+    level = 0
+    buffer = name
+    while type(buffer) is list:
+        buffer = buffer[0]
+        level += 1
+    if level >= width:
+        return [buffer]
+    else:
+        return [buffer] * (width - level)
+
 
 
 def paths_path_get(name: int = 0, width: int = 32) -> list:
@@ -27,25 +40,11 @@ def paths_path_get(name: int = 0, width: int = 32) -> list:
     return paths
 
 
-def paths_paths(name: int = 0, width: int = 32, verbose=0) -> list:
+def paths_paths(name: int = 1, width: int = 32, verbose=0) -> list:
     assert width > 0
-    assert 0 <= name <= width
+    assert 1 <= name <= width
     result = []
-    if name == 0:
-        for i in range(width):
-            paths = zero_rename(i)
-            len_paths = len(paths)
-            len_set_paths = len(set(paths))
-            assert len_paths - len_set_paths == 1
-            result.append(paths)
-        if verbose > 0:
-            pprint.pprint(result)
-        return result
-    else:
-        paths = zero_rename(name)
-        len_paths = len(paths)
-        len_set_paths = len(set(paths))
-        if verbose > 0:
-            print(paths, len_paths, len_set_paths)
-        assert len_paths - len_set_paths == 1
-        return result + paths
+    paths = route_level_up(name, width)
+    if verbose > 0:
+        pprint.pprint(paths)
+    return paths
