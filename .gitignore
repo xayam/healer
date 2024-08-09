@@ -7,4 +7,4 @@ __pycache__/
 h/model/history/
 h/mvp/history/
 h/player/web/demo-rewlis/data/
-h/model/barriers/tests/chess/history
+h/model/barriers/mvp/chess/history/
