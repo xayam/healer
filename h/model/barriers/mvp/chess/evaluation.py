@@ -55,7 +55,6 @@ class Evaluation:
                 piece = board.piece_type_at(square)
                 y = square // 8
                 x = square % 8
-                print(square, x, y, piece)
                 if color:
                     sign = -1
                 else:
@@ -92,15 +91,16 @@ class Evaluation:
             for x in range(4, 8):
                 sums += my_board[y][x]
         result.append(sums)
-
-        # pprint.pprint(my_board)
-        print(result)
         operations = []
         for i in range(len(result)):
-            operations.append([[result[0], 0],
-                               [0, result[1]],
-                               [0, result[2]],
-                               [0, result[3]],
+            # [0, result[1]],
+            # [0, result[2]],
+            # [0, result[3]]
+            operations.append([[result[i], 0],
+                               *[[0, result[j]]
+                                   for j in range(len(result))
+                                 if i != j
+                               ]
                                ])
         sum1 = 0
         sum2 = 0
@@ -108,9 +108,11 @@ class Evaluation:
             for j in range(len(operations[i])):
                 sum1 += operations[i][j][0]
                 sum2 += operations[j][j][1]
-        evaluate = (abs(sum1) + abs(sum2))/(sum1 + sum2)
-        # print(sum1, sum2, result)
-        # sys.exit()
+        if sum1 == sum2:
+            evaluate = 0
+        else:
+            evaluate = (abs(sum1) + abs(sum2))/(sum1 - sum2)
+        # print(evaluate, result, sum1, sum2)
         return int(100 * evaluate)
 
     def evaluate(self, board: chess.Board) -> int:
@@ -118,9 +120,4 @@ class Evaluation:
             eval = self.eval_side_zmb(board)
         else:
             eval = - self.eval_side_zmb(board)
-        # print(board)
-        # print(board.turn, eval)
-        # sys.exit()
         return eval
-        # - \
-        # self.eval_side(board, not board.turn)
