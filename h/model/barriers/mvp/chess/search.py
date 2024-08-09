@@ -42,7 +42,7 @@ class Search:
             return self.eval.evaluate(self.board, ply)
 
         # staticEval
-        bestValue = self.eval.evaluate(self.board)
+        bestValue = self.eval.evaluate(self.board, ply)
 
         if bestValue >= beta:
             return bestValue
@@ -91,10 +91,8 @@ class Search:
     def absearch(self, alpha: int, beta: int, depth: int, ply: int) -> int:
         if self.checkTime():
             return 0
-
-        # Dont search higher than MAX_PLY
-        if ply >= MAX_PLY:
-            return self.eval.evaluate(self.board)
+        if (ply >= MAX_PLY) or (depth > 5):
+            return self.eval.evaluate(self.board, ply)
 
         self.pvLength[ply] = ply
 
@@ -414,6 +412,6 @@ if __name__ == "__main__":
     board = chess.Board()
     search = Search(board)
 
-    search.limit.limited["depth"] = 6
+    search.limit.limited["depth"] = 5
 
     search.iterativeDeepening()
