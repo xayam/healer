@@ -36,7 +36,7 @@ class Evaluation:
 
         return material + psqt
 
-    def eval_side_zmb(self, board: chess.Board) -> int:
+    def eval_side_zmb(self, board: chess.Board, ply) -> int:
         piece_change = [0, 1, 2, 3, 6, 12, 40]
         my_board = [
             [0, 0, 0, 0, 0, 0, 0, 0],
@@ -113,11 +113,11 @@ class Evaluation:
         else:
             evaluate = (abs(sum1) + abs(sum2))/(sum1 - sum2)
         # print(evaluate, result, sum1, sum2)
-        return int(100 * evaluate)
+        return ply * int(100 * evaluate)
 
-    def evaluate(self, board: chess.Board) -> int:
+    def evaluate(self, board: chess.Board, ply) -> int:
         if board.turn:
-            eval = self.eval_side_zmb(board)
+            eval = self.eval_side_zmb(board, ply)
         else:
-            eval = - self.eval_side_zmb(board)
+            eval = - self.eval_side_zmb(board, ply)
         return eval

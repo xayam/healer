@@ -39,7 +39,7 @@ class Search:
 
         # Dont search higher than MAX_PLY
         if ply >= MAX_PLY:
-            return self.eval.evaluate(self.board)
+            return self.eval.evaluate(self.board, ply)
 
         # staticEval
         bestValue = self.eval.evaluate(self.board)
