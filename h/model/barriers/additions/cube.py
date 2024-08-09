@@ -1,7 +1,7 @@
 import sys
 from typing import Tuple
 
-from model.barriers.router import paths_paths
+from model.barriers.additions.router import paths_paths
 
 
 def cube_get(olap, indexes, key: int) -> int:

@@ -1,7 +1,7 @@
 import math
 import pprint
 
-from model.barriers.key import key_limit
+from model.barriers.additions.key import key_limit
 
 
 def route_level_up(name, width):

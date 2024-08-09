@@ -1,9 +1,9 @@
 from time import sleep
 from typing import Tuple
 
-from model.barriers.key import key_get
-from model.barriers.cube import cube_get, cube_put, cube_indexes
-from model.barriers.router import paths_path_get, route_level_up
+from model.barriers.additions.key import key_get
+from model.barriers.additions.cube import cube_get, cube_put, cube_indexes
+from model.barriers.additions.router import paths_path_get, route_level_up
 
 
 def zero_rename(old_name: int, width=32) -> list:
