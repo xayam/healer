@@ -120,11 +120,13 @@ class Evaluation:
         else:
             return board, move, 0
 
-    def evaluate(self, memory, board: chess.Board, depth, ply) -> int:
+    def evaluate(self, memory, ply, depth, board: chess.Board) -> int:
         variants = []
         moves = board.legal_moves
         shift = 0
-        for depth in range(1, 7):
+        depth = 0
+        while ply >= depth > 0:
+            depth += 1
             variants.append([[None], [None], [None]])
             shift += 1
             number = -1
@@ -135,21 +137,15 @@ class Evaluation:
                 eval = self.eval_side_zmb(board, move,7, 7)
                 variants.append([depth, shift-number, board.copy(), move, eval])
                 board.pop()
-                # if board.turn:
-                #     eval = self.eval_side_zmb(board, ply)
-                # else:
-                #     eval = - self.eval_side_zmb(board, ply)
         pprint.pprint(variants, width=120)
         diffs = []
         for d in variants:
             if d[-1] not in diffs:
                 diffs.append(d[-1])
-        # diffs = diffs[2:]
-        # diffs.sort()
         print(diffs)
         need_find = diffs[2]
         print(need_find)
-        sys.exit()
+        # sys.exit()
         diffs = []
         index = 0
         for d in variants:
@@ -166,7 +162,11 @@ class Evaluation:
             if d[0] == need_find:
                 shift = d[1]
         need_shift = shift
-        best_eval = variants[need_shift][2]
-        print(board, variants[need_shift][1], variants[need_shift][2])
+        try:
+            best_eval = variants[need_shift][1][-1]
+            print(board, best_eval, variants[need_shift][1][-2])
+        except TypeError:
+            print(board, variants[need_shift][1])
+            best_eval = variants[need_shift][1]
         # return self.eval_side_zmb(variants[need_shift][0], 7, 7)
-        return memory
+        return best_eval

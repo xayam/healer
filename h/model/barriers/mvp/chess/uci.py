@@ -11,10 +11,12 @@ import chess
 
 class UCI:
     def __init__(self) -> None:
+        self.memory = []
         self.out = stdout
         self.board = chess.Board()
-        self.search = Search.Search(self.board)
+        self.search = Search.Search(self.memory, self.board)
         self.thread = None
+        self.depth = 7
 
     def output(self, s) -> None:
         self.out.write(str(s) + "\n")
@@ -50,7 +52,7 @@ class UCI:
 
     def eval(self) -> None:
         eval = Eval.Evaluation()
-        self.output(eval.evaluate(self.board, MAX_PLY))
+        self.output(eval.evaluate(self.memory, MAX_PLY, self.board, self.depth))
 
     def process_command(self, input: str) -> None:
         splitted = input.split(" ")
@@ -118,7 +120,8 @@ class UCI:
 
             self.search.limit = limits
 
-            self.thread = Thread(target=self.search.iterativeDeepening)
+            self.thread = Thread(target=self.search.iterativeDeepening,
+                                 kwargs={"memory": self.memory, "ply": MAX_PLY})
             self.thread.start()
 
         elif command == "eval":

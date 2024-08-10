@@ -12,7 +12,8 @@ from sys import stdout
 
 
 class Search:
-    def __init__(self, board: chess.Board) -> None:
+    def __init__(self, memory, board: chess.Board) -> None:
+        self.memory = memory
         self.board = board
         self.transposition_table = TT.TranspositionTable()
         self.eval = Eval.Evaluation()
@@ -33,223 +34,23 @@ class Search:
         # History Table
         self.htable = [[[0 for x in range(64)] for y in range(64)] for z in range(2)]
 
-    def qsearch(self, alpha: int, beta: int, ply: int) -> int:
+    def qsearch(self, ply: int, alpha: int, beta: int) -> int:
         if self.stop or self.checkTime():
             return 0
+        return self.eval.evaluate(self.memory, ply, self.depth, self.board)
 
-        # Dont search higher than MAX_PLY
-        # if ply >= MAX_PLY:
-        return self.eval.evaluate(self.board, ply)
 
-        # staticEval
-        bestValue = self.eval.evaluate(self.board, ply)
-
-        if bestValue >= beta:
-            return bestValue
-
-        if bestValue > alpha:
-            alpha = bestValue
-
-        # Sort the moves, the highest score should come first
-        moves = sorted(
-            self.board.generate_legal_captures(),
-            key=lambda move: self.scoreQMove(move),
-            reverse=True,
-        )
-
-        for move in moves:
-            self.nodes += 1
-
-            captured = self.board.piece_type_at(move.to_square)
-
-            # Delta Pruning
-            if (
-                PQST.piece_values[captured] + 400 + bestValue < alpha
-                and not move.promotion
-            ):
-                continue
-
-            # Make move
-            self.board.push(move)
-
-            score = -self.qsearch(-beta, -alpha, ply + 1)
-
-            # Unmake move
-            self.board.pop()
-
-            if score > bestValue:
-                bestValue = score
-
-                if score > alpha:
-                    alpha = score
-
-                    if score >= beta:
-                        break
-
-        return bestValue
-
-    def absearch(self, alpha: int, beta: int, depth: int, ply: int) -> int:
+    def absearch(self, ply: int, depth: int, alpha: int, beta: int) -> int:
         if self.checkTime():
             return 0
         # if (ply >= MAX_PLY) or (depth > 5):
-        return self.eval.evaluate(self.board, depth, ply)
+        return self.eval.evaluate(self.memory, ply, depth, self.board)
 
-        self.pvLength[ply] = ply
 
-        RootNode = ply == 0
-
-        hashKey = self.getHash()
-
-        if not RootNode:
-            if self.isRepetition(hashKey):
-                return -5
-
-            if self.board.halfmove_clock >= 100:
-                return 0
-
-            # Mate distance pruning
-            alpha = max(alpha, mated_in(ply))
-            beta = min(beta, mate_in(ply + 1))
-            if alpha >= beta:
-                return alpha
-
-        # Jump into qsearch
-        if depth <= 0:
-            return self.qsearch(alpha, beta, ply)
-
-        # Transposition Table probing
-        tte = self.transposition_table.probeEntry(hashKey)
-        ttHit = hashKey == tte.key
-        ttMove = tte.move if ttHit else chess.Move.null()
-
-        # Adjust score
-        ttScore = (
-            self.transposition_table.scoreFromTT(tte.score, ply)
-            if ttHit
-            else VALUE_NONE
-        )
-
-        if not RootNode and tte.depth >= depth and ttHit:
-            if tte.flag == TT.Flag.EXACTBOUND:
-                return ttScore
-            elif tte.flag == TT.Flag.LOWERBOUND:
-                alpha = max(alpha, ttScore)
-            elif tte.flag == TT.Flag.UPPERBOUND:
-                beta = min(beta, ttScore)
-
-            if alpha >= beta:
-                return ttScore
-
-        inCheck = self.board.is_check()
-
-        # Null move pruning
-        if depth >= 3 and not inCheck:
-            self.board.push(chess.Move.null())
-
-            score = -self.absearch(-beta, -beta + 1, depth - 2, ply + 1)
-
-            self.board.pop()
-
-            if score >= beta:
-
-                if score >= VALUE_TB_WIN_IN_MAX_PLY:
-                    score = beta
-
-                return score
-
-        oldAlpha = alpha
-        bestScore = -VALUE_INFINITE
-        bestMove = chess.Move.null()
-        madeMoves = 0
-
-        # Sort the moves, the highest score should come first
-        moves = sorted(
-            self.board.legal_moves,
-            key=lambda move: self.scoreMove(move, ttMove),
-            reverse=True,
-        )
-
-        for move in moves:
-            madeMoves += 1
-            self.nodes += 1
-
-            # Make move
-            self.board.push(move)
-            self.hashHistory.append(hashKey)
-
-            # Search
-            score = -self.absearch(-beta, -alpha, depth - 1, ply + 1)
-
-            # Unmake move
-            self.board.pop()
-            self.hashHistory.pop()
-
-            if score > bestScore:
-                bestScore = score
-                bestMove = move
-
-                # update PV
-                self.pvTable[ply][ply] = move
-
-                for i in range(ply + 1, self.pvLength[ply + 1]):
-                    self.pvTable[ply][i] = self.pvTable[ply + 1][i]
-
-                self.pvLength[ply] = self.pvLength[ply + 1]
-
-                if score > alpha:
-                    # update alpha!
-                    alpha = score
-
-                    if score >= beta:
-                        # update history
-                        if not self.board.is_capture(move):
-                            bonus = depth * depth
-                            hhBonus = (
-                                bonus
-                                - self.htable[self.board.turn][move.from_square][
-                                    move.to_square
-                                ]
-                                * abs(bonus)
-                                / 16384
-                            )
-
-                            self.htable[self.board.turn][move.from_square][
-                                move.to_square
-                            ] += hhBonus
-                        break
-
-        # No moves were played so its checkmate or stalemate
-        if madeMoves == 0:
-            if inCheck:
-                return mated_in(ply)
-            else:
-                return 0
-
-        # Calculate bound and save position in TT
-
-        bound = TT.Flag.NONEBOUND
-
-        if bestScore >= beta:
-            bound = TT.Flag.LOWERBOUND
-        else:
-            if alpha != oldAlpha:
-                bound = TT.Flag.EXACTBOUND
-            else:
-                bound = TT.Flag.UPPERBOUND
-
-        if not self.checkTime():
-            # Store in TT
-            self.transposition_table.storeEntry(
-                hashKey, depth, bound, bestScore, bestMove, ply
-            )
-
-        return bestScore
-
-    def iterativeDeepening(self) -> None:
-
+    def iterativeDeepening(self, memory, ply) -> None:
         self.nodes = 0
 
-        score = -VALUE_INFINITE
+        score = -400
         bestmove = chess.Move.null()
 
         # Start measuring time
@@ -257,7 +58,7 @@ class Search:
 
         # Iterative Deepening Loop
         for d in range(1, self.limit.limited["depth"] + 1):
-            score = self.absearch(-VALUE_INFINITE, VALUE_INFINITE, d, 0)
+            score = self.absearch(ply, d, -VALUE_INFINITE, VALUE_INFINITE)
 
             # Dont use completed depths result
             if self.stop or self.checkTime(True):
@@ -409,9 +210,9 @@ class Search:
 
 # Run search.py instead of main.py if you want to profile it!
 if __name__ == "__main__":
+    memory = [[0] * 7] * 7
     board = chess.Board()
-    search = Search(board)
+    search = Search(memory, board)
 
-    search.limit.limited["depth"] = 5
-
+    search.limit.limited["depth"] = 7
     search.iterativeDeepening()
