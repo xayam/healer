@@ -38,8 +38,8 @@ class Evaluation:
 
         return material + psqt
 
-    def eval_depth_zmb(self, ply, depth, board: chess.Board, move: chess.Move) -> \
-            Tuple[chess.Board, chess.Move, int]:
+    def zmb_depth_eval(self, ply, depth, board: chess.Board, move: chess.Move) -> \
+            Tuple[int, int]:
         piece_change = [0, 28, 27, 26, 25, 24, 23]
         my_board = [
             [0, 0, 0, 0, 0, 0, 0, 0],
@@ -51,74 +51,68 @@ class Evaluation:
             [0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0]
         ]
-        if ply == depth:
-            for color in [False, True]:
-                occupied = board.occupied_co[color]
-                while occupied:
-                    square = lsb(occupied)
-                    piece = board.piece_type_at(square)
-                    y = square // 8
-                    x = square % 8
-                    if color:
-                        sign = -1
-                    else:
-                        sign = 1
-                    my_board[y][x] = \
-                        sign * piece_change[piece]
-                    occupied = poplsb(occupied)
-            for y in range(4):
-               for x in range(8):
-                   if x % 2 == 0:
-                       my_board[y][x] = -my_board[y][x]
-            for y in range(4, 8):
-               for x in range(8):
-                   if x % 2 == 1:
-                       my_board[y][x] = -my_board[y][x]
-            sums = 0
-            result = []
-            for y in range(4):
-                for x in range(4):
-                    sums += my_board[y][x]
-            result.append(sums)
-            sums = 0
-            for y in range(4):
-                for x in range(4, 8):
-                    sums += my_board[y][x]
-            result.append(sums)
-            sums = 0
-            for y in range(4, 8):
-                for x in range(4):
-                    sums += my_board[y][x]
-            result.append(sums)
-            sums = 0
-            for y in range(4, 8):
-                for x in range(4, 8):
-                    sums += my_board[y][x]
-            result.append(sums)
-            operations = []
-            for i in range(len(result)):
-                # [0, result[1]],
-                # [0, result[2]],
-                # [0, result[3]]
-                operations.append([[result[i], 0],
-                                   *[[0, result[j]]
-                                       for j in range(len(result))
-                                     if i != j
-                                   ]
-                                   ])
-            sum1 = 0
-            sum2 = 0
-            for i in range(len(operations)):
-                for j in range(len(operations[i])):
-                    sum1 += operations[i][j][0]
-                    sum2 += operations[j][j][1]
-            if sum1 == sum2:
-                evaluate = 0
-            else:
-                evaluate = (abs(sum1) + abs(sum2))/(sum1 - sum2)
-            return board, move, ply + int(100 * evaluate)
+        for color in [False, True]:
+            occupied = board.occupied_co[color]
+            while occupied:
+                square = lsb(occupied)
+                piece = board.piece_type_at(square)
+                y = square // 8
+                x = square % 8
+                if color:
+                    sign = -1
+                else:
+                    sign = 1
+                my_board[y][x] = \
+                    sign * piece_change[piece]
+                occupied = poplsb(occupied)
+        for y in range(4):
+           for x in range(8):
+               if x % 2 == 0:
+                   my_board[y][x] = -my_board[y][x]
+        for y in range(4, 8):
+           for x in range(8):
+               if x % 2 == 1:
+                   my_board[y][x] = -my_board[y][x]
+        sums = 0
+        result = []
+        for y in range(4):
+            for x in range(4):
+                sums += my_board[y][x]
+        result.append(sums)
+        sums = 0
+        for y in range(4):
+            for x in range(4, 8):
+                sums += my_board[y][x]
+        result.append(sums)
+        sums = 0
+        for y in range(4, 8):
+            for x in range(4):
+                sums += my_board[y][x]
+        result.append(sums)
+        sums = 0
+        for y in range(4, 8):
+            for x in range(4, 8):
+                sums += my_board[y][x]
+        result.append(sums)
+        operations = []
+        for i in range(len(result)):
+            operations.append([[result[i], 0],
+                               *[[0, result[j]]
+                                   for j in range(len(result))
+                                 if i != j
+                               ]
+                               ])
+        sum1 = 0
+        sum2 = 0
+        for i in range(len(operations)):
+            for j in range(len(operations[i])):
+                sum1 += operations[i][j][0]
+                sum2 += operations[j][j][1]
+        if sum1 == sum2:
+            evaluate = 0
         else:
-            return board, move, 0
+            evaluate = (abs(sum1) + abs(sum2))/(sum1 - sum2)
+        return depth + 1, int(100 * evaluate)
 
     def evaluate(self, memory, ply, alpha: int,
                  beta: int, board: chess.Board) -> Tuple[int, int]:
@@ -134,7 +128,7 @@ class Evaluation:
                 board.push(move)
                 # number += 1
                 shift += 1
-                depth = self.eval_depth_zmb(ply, depth, board, move, )
+                depth, eval = self.zmb_depth_eval(ply, depth, board, move)
                 variants.append([depth, shift-number, board.copy(), move, eval])
                 board.pop()
         pprint.pprint(variants, width=120)
@@ -172,5 +166,5 @@ class Evaluation:
             print(board, variants[need_shift][1])
             best_eval = variants[need_shift][1]
         best_move = variants[need_shift][-2]
-        # return self.eval_depth_zmb(variants[need_shift][0], 7, 7)
+        # return self.zmb_depth_eval(variants[need_shift][0], 7, 7)
         return best_move, best_eval
