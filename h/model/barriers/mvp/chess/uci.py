@@ -51,8 +51,8 @@ class UCI:
         pass
 
     def eval(self) -> None:
-        eval = Eval.Evaluation()
-        self.output(eval.evaluate(self.memory, MAX_PLY, self.depth, self.board))
+        eval = Eval.Evaluation(self.memory)
+        self.output(eval.evaluate(MAX_PLY, self.depth, self.board))
 
     def process_command(self, input: str) -> None:
         splitted = input.split(" ")

@@ -18,7 +18,7 @@ class Search:
         self.memory = memory
         self.board = board
         self.transposition_table = TT.TranspositionTable()
-        self.eval = Eval.Evaluation()
+        self.eval = Eval.Evaluation(self.memory)
 
         self.pvLength = [0] * MAX_PLY
         self.pvTable = [[chess.Move.null()] * MAX_PLY for _ in range(MAX_PLY)]

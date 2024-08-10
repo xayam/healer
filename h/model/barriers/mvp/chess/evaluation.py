@@ -10,6 +10,10 @@ import chess
 
 
 class Evaluation:
+
+    def __init__(self, memory):
+        self.memory = memory
+
     def eval_side(self, board: chess.Board, color: chess.Color) -> int:
         occupied = board.occupied_co[color]
 
@@ -42,14 +46,10 @@ class Evaluation:
             Tuple[int, int]:
         piece_change = [0, 28, 27, 26, 25, 24, 23]
         my_board = [
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0]
+            [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0]
         ]
         for color in [False, True]:
             occupied = board.occupied_co[color]
@@ -114,7 +114,7 @@ class Evaluation:
             evaluate = (abs(sum1) + abs(sum2))/(sum1 - sum2)
         return depth + 1, int(100 * evaluate)
 
-    def evaluate(self, memory, ply, alpha: int,
+    def evaluate(self, ply, alpha: int,
                  beta: int, board: chess.Board) -> Tuple[int, int]:
         variants = []
         moves = board.legal_moves
@@ -131,17 +131,18 @@ class Evaluation:
                 depth, eval = self.zmb_depth_eval(ply, depth, board, move)
                 variants.append([depth, shift-number, board.copy(), move, eval])
                 board.pop()
+        self.memory.append(variants)
         pprint.pprint(variants, width=120)
         diffs = []
         for d in variants:
             if d[-1] not in diffs:
                 diffs.append(d[-1])
-        print(diffs)
+        # print(diffs)
         try:
             need_find = diffs[2]
         except IndexError:
             return 0, 0
-        print(need_find)
+        # print(need_find)
         # sys.exit()
         diffs = []
         index = 0
