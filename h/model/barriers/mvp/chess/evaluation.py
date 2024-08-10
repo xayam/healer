@@ -42,10 +42,10 @@ class Evaluation:
 
         return material + psqt
 
-    def zmb_depth_eval(self, ply, depth, board: chess.Board, move: chess.Move) -> \
+    def zmb_depth_eval(self, ply, depth, board: chess.Board) -> \
             Tuple[int, int]:
-        piece_change = [0, 28, 27, 26, 25, 24, 23]
-        my_board = [
+        zmb_value = [0, 28, 27, 26, 25, 24, 23]
+        zmb_board = [
             [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0],
@@ -62,37 +62,37 @@ class Evaluation:
                     sign = -1
                 else:
                     sign = 1
-                my_board[y][x] = \
-                    sign * piece_change[piece]
+                zmb_board[y][x] = \
+                    sign * zmb_value[piece]
                 occupied = poplsb(occupied)
         for y in range(4):
            for x in range(8):
                if x % 2 == 0:
-                   my_board[y][x] = -my_board[y][x]
+                   zmb_board[y][x] = -zmb_board[y][x]
         for y in range(4, 8):
            for x in range(8):
                if x % 2 == 1:
-                   my_board[y][x] = -my_board[y][x]
+                   zmb_board[y][x] = -zmb_board[y][x]
         sums = 0
         result = []
         for y in range(4):
             for x in range(4):
-                sums += my_board[y][x]
+                sums += zmb_board[y][x]
         result.append(sums)
         sums = 0
         for y in range(4):
             for x in range(4, 8):
-                sums += my_board[y][x]
+                sums += zmb_board[y][x]
         result.append(sums)
         sums = 0
         for y in range(4, 8):
             for x in range(4):
-                sums += my_board[y][x]
+                sums += zmb_board[y][x]
         result.append(sums)
         sums = 0
         for y in range(4, 8):
             for x in range(4, 8):
-                sums += my_board[y][x]
+                sums += zmb_board[y][x]
         result.append(sums)
         operations = []
         for i in range(len(result)):
@@ -128,7 +128,7 @@ class Evaluation:
                 board.push(move)
                 # number += 1
                 shift += 1
-                depth, eval = self.zmb_depth_eval(ply, depth, board, move)
+                depth, eval = self.zmb_depth_eval(ply, depth, board)
                 variants.append([depth, shift-number, board.copy(), move, eval])
                 board.pop()
         self.memory.append(variants)

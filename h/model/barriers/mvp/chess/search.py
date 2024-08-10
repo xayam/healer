@@ -45,7 +45,7 @@ class Search:
     def absearch(self, ply: int, alpha: int, beta: int) -> Tuple[int, int]:
         if self.checkTime():
             return 0, 0
-        return self.eval.evaluate(self.memory, ply, alpha, beta, self.board)
+        return self.eval.evaluate(ply, alpha, beta, self.board)
 
 
     def iterativeDeepening(self, memory, ply) -> None:
