@@ -38,8 +38,8 @@ class Search:
             return 0
 
         # Dont search higher than MAX_PLY
-        if ply >= MAX_PLY:
-            return self.eval.evaluate(self.board, ply)
+        # if ply >= MAX_PLY:
+        return self.eval.evaluate(self.board, ply)
 
         # staticEval
         bestValue = self.eval.evaluate(self.board, ply)
@@ -91,8 +91,8 @@ class Search:
     def absearch(self, alpha: int, beta: int, depth: int, ply: int) -> int:
         if self.checkTime():
             return 0
-        if (ply >= MAX_PLY) or (depth > 5):
-            return self.eval.evaluate(self.board, ply)
+        # if (ply >= MAX_PLY) or (depth > 5):
+        return self.eval.evaluate(self.board, depth, ply)
 
         self.pvLength[ply] = ply
 
