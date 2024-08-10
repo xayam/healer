@@ -1,3 +1,5 @@
+import pprint
+import sys
 import time
 from typing import Tuple
 
@@ -41,12 +43,12 @@ class Search:
     #         return 0
     #     return self.eval.evaluate(self.memory, ply, depth, self.board)
 
-
-    def absearch(self, ply: int, alpha: int, beta: int) -> Tuple[int, int]:
+    def absearch(self, ply: int, alpha: int, beta: int) -> list:
         if self.checkTime():
-            return 0, 0
-        return self.eval.evaluate(ply, alpha, beta, self.board)
-
+            return []
+        _ = self.eval.evaluate(ply, alpha, beta, self.board)
+        pprint.pprint(self.memory)
+        return self.memory
 
     def iterativeDeepening(self, memory, ply) -> None:
         self.nodes = 0
@@ -127,8 +129,8 @@ class Search:
             return True
 
         if (
-            self.limit.limited["nodes"] != 0
-            and self.nodes >= self.limit.limited["nodes"]
+                self.limit.limited["nodes"] != 0
+                and self.nodes >= self.limit.limited["nodes"]
         ):
             return True
 
@@ -172,18 +174,18 @@ class Search:
         time_in_ms = int(time / 1_000_000)
         time_in_seconds = max(1, time_in_ms / 1_000)
         info = (
-            "info depth "
-            + str(depth)
-            + " score "
-            + str(self.convert_score(score))
-            + " nodes "
-            + str(self.nodes)
-            + " nps "
-            + str(int(self.nodes / time_in_seconds))
-            + " time "
-            + str(round(time / 1_000_000))
-            + " pv"
-            + self.getPV()
+                "info depth "
+                + str(depth)
+                + " score "
+                + str(self.convert_score(score))
+                + " nodes "
+                + str(self.nodes)
+                + " nps "
+                + str(int(self.nodes / time_in_seconds))
+                + " time "
+                + str(round(time / 1_000_000))
+                + " pv"
+                + self.getPV()
         )
         return info
 

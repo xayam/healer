@@ -52,7 +52,8 @@ class UCI:
 
     def eval(self) -> None:
         eval = Eval.Evaluation(self.memory)
-        self.output(eval.evaluate(MAX_PLY, self.depth, self.board))
+        _, evaluate = self.search.absearch(MAX_PLY, 400, -400)
+        self.output(evaluate)
 
     def process_command(self, input: str) -> None:
         splitted = input.split(" ")

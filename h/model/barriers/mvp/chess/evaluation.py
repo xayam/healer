@@ -115,7 +115,7 @@ class Evaluation:
         return depth + 1, int(100 * evaluate)
 
     def evaluate(self, ply, alpha: int,
-                 beta: int, board: chess.Board) -> Tuple[int, int]:
+                 beta: int, board: chess.Board) -> list:
         variants = []
         moves = board.legal_moves
         shift = 0
@@ -137,35 +137,19 @@ class Evaluation:
         for d in variants:
             if d[-1] not in diffs:
                 diffs.append(d[-1])
-        # print(diffs)
         try:
             need_find = diffs[2]
         except IndexError:
-            return 0, 0
-        # print(need_find)
-        # sys.exit()
+            return []
         diffs = []
         index = 0
         for d in variants:
             if d[-1] not in diffs:
                 diffs.append([d[-1], index])
             index += 1
-        # diffs = diffs[1:]
-        # diffs.sort()
-        # best_move = variants[]
         diffs = diffs[1:]
         shift = 0
         for d in diffs:
             if d[0] == need_find:
                 shift = d[1]
-        need_shift = shift
-        try:
-            best_eval = variants[need_shift][1][-1]
-            print(board, best_eval, variants[need_shift][1][-2])
-        except TypeError:
-            raise
-            print(board, variants[need_shift][1])
-            best_eval = variants[need_shift][1]
-        best_move = variants[need_shift][-2]
-        # return self.zmb_depth_eval(variants[need_shift][0], 7, 7)
-        return best_move, best_eval
+        return self.memory[-1]
