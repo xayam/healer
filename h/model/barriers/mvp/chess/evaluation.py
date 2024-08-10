@@ -152,4 +152,4 @@ class Evaluation:
         for d in diffs:
             if d[0] == need_find:
                 shift = d[1]
-        return self.memory[-1]
+        return self.memory

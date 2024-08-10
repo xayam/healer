@@ -122,7 +122,7 @@ class UCI:
             self.search.limit = limits
 
             self.thread = Thread(target=self.search.iterativeDeepening,
-                                 kwargs={"memory": self.memory, "ply": MAX_PLY})
+                                 kwargs={"ply": MAX_PLY})
             self.thread.start()
 
         elif command == "eval":

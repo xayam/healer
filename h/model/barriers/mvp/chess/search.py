@@ -50,13 +50,13 @@ class Search:
         pprint.pprint(self.memory)
         return self.memory
 
-    def iterativeDeepening(self, memory, ply) -> None:
+    def iterativeDeepening(self, ply) -> None:
         self.nodes = 0
         score = -400
         bestmove = chess.Move.null()
         self.t0 = time.time_ns()
         for p in range(1, ply):
-            bestmove, score = self.absearch(p, -score, score)
+            memory = self.absearch(p, -score, score)
             if self.stop or self.checkTime(True):
                 break
             # Save bestmove
