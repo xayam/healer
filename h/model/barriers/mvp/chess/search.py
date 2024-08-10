@@ -63,6 +63,7 @@ class Search:
             bestmove = self.pvTable[0][0]
             # print info
             now = time.time_ns()
+            # SUCCESS score is down
             stdout.write(self.stats(p, score, now - self.t0) + "\n")
             stdout.flush()
         # last attempt to get a bestmove
