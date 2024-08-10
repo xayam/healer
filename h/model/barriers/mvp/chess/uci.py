@@ -52,7 +52,7 @@ class UCI:
 
     def eval(self) -> None:
         eval = Eval.Evaluation()
-        self.output(eval.evaluate(self.memory, MAX_PLY, self.board, self.depth))
+        self.output(eval.evaluate(self.memory, MAX_PLY, self.depth, self.board))
 
     def process_command(self, input: str) -> None:
         splitted = input.split(" ")

@@ -38,7 +38,7 @@ class Evaluation:
 
         return material + psqt
 
-    def eval_side_zmb(self, board: chess.Board, move: chess.Move, depth, ply) -> \
+    def eval_depth_zmb(self, ply, depth, board: chess.Board, move: chess.Move) -> \
             Tuple[chess.Board, chess.Move, int]:
         piece_change = [0, 28, 27, 26, 25, 24, 23]
         my_board = [
@@ -120,21 +120,21 @@ class Evaluation:
         else:
             return board, move, 0
 
-    def evaluate(self, memory, ply, depth, board: chess.Board) -> int:
+    def evaluate(self, memory, ply, alpha: int,
+                 beta: int, board: chess.Board) -> Tuple[int, int]:
         variants = []
         moves = board.legal_moves
         shift = 0
-        depth = 0
-        while ply >= depth > 0:
-            depth += 1
+        depth = 1
+        shift = 2
+        while shift < ply:
             variants.append([[None], [None], [None]])
-            shift += 1
             number = -1
             for move in moves:
                 board.push(move)
                 # number += 1
                 shift += 1
-                eval = self.eval_side_zmb(board, move,7, 7)
+                depth = self.eval_depth_zmb(ply, depth, board, move, )
                 variants.append([depth, shift-number, board.copy(), move, eval])
                 board.pop()
         pprint.pprint(variants, width=120)
@@ -143,7 +143,10 @@ class Evaluation:
             if d[-1] not in diffs:
                 diffs.append(d[-1])
         print(diffs)
-        need_find = diffs[2]
+        try:
+            need_find = diffs[2]
+        except IndexError:
+            return 0, 0
         print(need_find)
         # sys.exit()
         diffs = []
@@ -157,7 +160,6 @@ class Evaluation:
         # best_move = variants[]
         diffs = diffs[1:]
         shift = 0
-        need_shift = 0
         for d in diffs:
             if d[0] == need_find:
                 shift = d[1]
@@ -166,7 +168,9 @@ class Evaluation:
             best_eval = variants[need_shift][1][-1]
             print(board, best_eval, variants[need_shift][1][-2])
         except TypeError:
+            raise
             print(board, variants[need_shift][1])
             best_eval = variants[need_shift][1]
-        # return self.eval_side_zmb(variants[need_shift][0], 7, 7)
-        return best_eval
+        best_move = variants[need_shift][-2]
+        # return self.eval_depth_zmb(variants[need_shift][0], 7, 7)
+        return best_move, best_eval

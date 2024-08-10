@@ -1,4 +1,6 @@
 import time
+from typing import Tuple
+
 import tt as TT
 import evaluation as Eval
 import psqt as PQST
@@ -34,48 +36,36 @@ class Search:
         # History Table
         self.htable = [[[0 for x in range(64)] for y in range(64)] for z in range(2)]
 
-    def qsearch(self, ply: int, alpha: int, beta: int) -> int:
-        if self.stop or self.checkTime():
-            return 0
-        return self.eval.evaluate(self.memory, ply, self.depth, self.board)
+    # def qsearch(self, ply: int, depth, alpha: int, beta: int) -> int:
+    #     if self.stop or self.checkTime():
+    #         return 0
+    #     return self.eval.evaluate(self.memory, ply, depth, self.board)
 
 
-    def absearch(self, ply: int, depth: int, alpha: int, beta: int) -> int:
+    def absearch(self, ply: int, alpha: int, beta: int) -> Tuple[int, int]:
         if self.checkTime():
-            return 0
-        # if (ply >= MAX_PLY) or (depth > 5):
-        return self.eval.evaluate(self.memory, ply, depth, self.board)
+            return 0, 0
+        return self.eval.evaluate(self.memory, ply, alpha, beta, self.board)
 
 
     def iterativeDeepening(self, memory, ply) -> None:
         self.nodes = 0
-
         score = -400
         bestmove = chess.Move.null()
-
-        # Start measuring time
         self.t0 = time.time_ns()
-
-        # Iterative Deepening Loop
-        for d in range(1, self.limit.limited["depth"] + 1):
-            score = self.absearch(ply, d, -VALUE_INFINITE, VALUE_INFINITE)
-
-            # Dont use completed depths result
+        for p in range(1, ply):
+            bestmove, score = self.absearch(p, -score, score)
             if self.stop or self.checkTime(True):
                 break
-
             # Save bestmove
             bestmove = self.pvTable[0][0]
-
             # print info
             now = time.time_ns()
-            stdout.write(self.stats(d, score, now - self.t0) + "\n")
+            stdout.write(self.stats(p, score, now - self.t0) + "\n")
             stdout.flush()
-
         # last attempt to get a bestmove
         if bestmove == chess.Move.null():
             bestmove = self.pvTable[0][0]
-
         # print bestmove
         stdout.write("bestmove " + str(bestmove) + "\n")
         stdout.flush()
