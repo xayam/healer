@@ -1,0 +1,14 @@
+Barrier 0
+Plan
+
+
+
+
+1. Keys
+2. Mathematics
+3. Complex numbers
+4. Optimization
+5. CPU 32 bit
+6. CPU 128 bit
+7. Gravitation
+8. Material Design

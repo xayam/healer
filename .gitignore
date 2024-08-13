@@ -1,0 +1,15 @@
+.git/
+.github/
+build/
+dist/
+venv/*
+.idea/
+__pycache__/
+.run/
+h/model/history/
+h/mvp/history/
+h/player/web/demo-rewlis/data/
+h/model/barriers/mvp/chess/history/
+h/model/barriers/mvp/stoloto/
+h/input/sources/telegram/@your_mentoor/daft/history/
+xasifaz.spec
