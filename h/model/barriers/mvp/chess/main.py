@@ -2,11 +2,11 @@ import uci
 
 
 def main() -> None:
-    uci_loop = uci.UCI()
+    uciLoop = uci.UCI()
 
     while True:
         command = input()
-        uci_loop.process_command(command)
+        uciLoop.processCommand(command)
 
         if command == "quit":
             break

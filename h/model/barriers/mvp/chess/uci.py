@@ -1,5 +1,5 @@
 import search as Search
-import evaluation as Eval
+from evaluation import evaluate
 from helpers import *
 from limits import *
 
@@ -11,12 +11,10 @@ import chess
 
 class UCI:
     def __init__(self) -> None:
-        self.memory = []
         self.out = stdout
         self.board = chess.Board()
-        self.search = Search.Search(self.memory, self.board)
-        self.thread = None
-        self.depth = 7
+        self.search = Search.Search(self.board)
+        self.thread: None
 
     def output(self, s) -> None:
         self.out.write(str(s) + "\n")
@@ -24,21 +22,23 @@ class UCI:
 
     def stop(self) -> None:
         self.search.stop = True
-        try:
-            self.thread.join()
-        except:
-            pass
+        if self.thread is not None:
+            try:
+                self.thread.join()
+            except:
+                pass
 
     def quit(self) -> None:
         self.search.stop = True
-        try:
-            self.thread.join()
-        except:
-            pass
+        if self.thread is not None:
+            try:
+                self.thread.join()
+            except:
+                pass
 
     def uci(self) -> None:
-        self.output("id name xasifaz")
-        self.output("id author Alexey Belyanin, xayam@yandex.ru")
+        self.output("id name python-chess-engine")
+        self.output("id author Max, aka Disservin")
         self.output("")
         self.output("option name Move Overhead type spin default 5 min 0 max 5000")
         self.output("option name Ponder type check default false")
@@ -51,30 +51,25 @@ class UCI:
         pass
 
     def eval(self) -> None:
-        pass
-        # TODO
-        # eval = Eval.Evaluation(self.memory)
-        pv = self.search.absearch(MAX_PLY, -400, 400)
-        # self.output(evaluate)
+        self.output(evaluate(self.board))
 
-    def process_command(self, input: str) -> None:
+    def processCommand(self, input: str) -> None:
         splitted = input.split(" ")
-        command = splitted[0]
-        if command == "quit":
+        if splitted[0] == "quit":
             self.quit()
-        elif command == "stop":
+        elif splitted[0] == "stop":
             self.stop()
             self.search.reset()
-        elif command == "ucinewgame":
+        elif splitted[0] == "ucinewgame":
             self.ucinewgame()
             self.search.reset()
-        elif command == "uci":
+        elif splitted[0] == "uci":
             self.uci()
-        elif command == "isready":
+        elif splitted[0] == "isready":
             self.isready()
-        elif command == "setoption":
+        elif splitted[0] == "setoption":
             pass
-        elif command == "position":
+        elif splitted[0] == "position":
             self.search.reset()
             fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
             movelist = []
@@ -97,10 +92,9 @@ class UCI:
             for move in movelist:
                 self.board.push_uci(move)
                 self.search.hashHistory.append(self.search.getHash())
-
-        elif command == "print":
+        elif splitted[0] == "print":
             print(self.board)
-        elif command == "go":
+        elif splitted[0] == "go":
             limits = Limits(0, MAX_PLY, 0)
 
             l = ["depth", "nodes"]
@@ -123,9 +117,7 @@ class UCI:
 
             self.search.limit = limits
 
-            self.thread = Thread(target=self.search.iterativeDeepening,
-                                 kwargs={"ply": MAX_PLY})
+            self.thread = Thread(target=self.search.iterativeDeepening)
             self.thread.start()
-
-        elif command == "eval":
+        elif splitted[0] == "eval":
             return self.eval()
