@@ -9,6 +9,7 @@ from typing import Tuple
 
 import chess
 from mcnode import MCTSNode
+from model.barriers.mvp.chess.helpers import ITERATIONS
 
 
 class MCTS:
@@ -26,7 +27,7 @@ class MCTS:
         :param depth_limit: The depth limit to use in the algorithm
         :param use_opening_book: Whether to use the opening book """
         self.state = state
-        self.search = None
+        # self.search = None
         self.iterations = iterations  # The number of iterations to perform
         # The exploration constant, sqrt(2) by default
         self.exploration_constant = exploration_constant
@@ -72,14 +73,12 @@ class MCTS:
             children = [child for child in children if child.alpha <= node.beta]
             if len(children) == 0:
                 return node
-            if node.state.turn == chess.WHITE:
-                node = max(children,
-                           key=lambda c: c.ucb1(self.exploration_constant,
-                                                self.search))
-            else:
-                node = min(children,
-                           key=lambda c: c.ucb1(self.exploration_constant,
-                                                self.search))
+            # if node.state.turn == chess.WHITE:
+            node = max(children,
+                       key=lambda c: c.ucb1(self.exploration_constant))
+            # else:
+            #     node = min(children,
+            #                key=lambda c: c.ucb1(self.exploration_constant))
             depth += 1
         return node
 
@@ -124,6 +123,7 @@ class MCTS:
         while node is not None:
             node.visits += 1
             node.wins += res
+            # print(node.alpha, node.beta)
             node = node.parent
 
     def select_move(self) -> Tuple[str, float]:
@@ -138,17 +138,15 @@ class MCTS:
             self._backpropagate(node, res)
         if not self.current_node.children:
             return "", 0.0
-        if self.current_node.state.turn == chess.WHITE:
-            best_child = max(self.current_node.children,
-                             key=lambda c: c.ucb1(self.exploration_constant,
-                                                  self.search))
-        else:
-            best_child = min(self.current_node.children,
-                             key=lambda c: c.ucb1(self.exploration_constant,
-                                                  self.search))
+        # if self.current_node.state.turn == chess.WHITE:
+        best_child = max(self.current_node.children,
+                         key=lambda c: c.ucb1(self.exploration_constant))
+        # else:
+        #     best_child = min(self.current_node.children,
+        #                      key=lambda c: c.ucb1(self.exploration_constant))
         self.current_node = best_child
-        return best_child.move, best_child.ucb1(self.exploration_constant,
-                                                self.search)
+        self.set_current_node()
+        return best_child.move, best_child.ucb1(self.exploration_constant)
 
     def mcts_best(self):
         _move, _score = self.select_move()
@@ -157,36 +155,21 @@ class MCTS:
 
 if __name__ == "__main__":
     chess_state = chess.Board()
-    # search = search.Search()
-    mcts = MCTS(state=chess_state,
-                # search=search,
-                iterations=10)
-    start = time.time()
     move = ""
     while not chess_state.is_game_over():
-        pr = cProfile.Profile()
-        pr.enable()
-        move, score = mcts.select_move()
-        pr.disable()
-        s = io.StringIO()
-        sort_by = 'tottime'
-        ps = pstats.Stats(pr, stream=s).sort_stats(sort_by)
-        ps.print_stats()
-        # print(s.getvalue())
-        # print(move)
-        # print(f"\nTime taken on average/game: {(time0.time0() - start)/20}")
-        # print(move)
+        mcts = MCTS(state=chess_state,
+                    iterations=ITERATIONS,
+                    depth_limit=None)
+        move, score = mcts.mcts_best()
         print()
         print(chess_state)
         move = str(move).strip()
         if move:
             m = chess.Move.from_uci(move)
             chess_state.push(m)
-            mcts.set_current_node()
         else:
             break
         print(move, score)
-        # sys.exit()
     result = chess_state.result()
     if not move:
         result = "1/2-1/2"
