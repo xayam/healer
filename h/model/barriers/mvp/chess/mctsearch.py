@@ -162,7 +162,7 @@ def mcts_best(chess_state: chess.Board):
     best = max(move_scores, key=lambda x: x[0])
     # else:
     #     best = min(move_scores, key=lambda x: x[0])
-    print(move_scores)
+    # print(move_scores)
     return best[0], best[1]
 
 
