@@ -28,12 +28,12 @@ def eval_m(board: chess.Board, color: chess.Color) -> int:
     return material + psqt
 
 
-def eval_zmb(board: chess.Board) -> float:
+def eval_zmb(board: chess.Board) -> int:
     # zmb_value = [0, 6, 5, 4, 3, 2, 1]
     # zmb_value = [0, 1, 2, 3, 4, 5, 6]
     # zmb_value = [0, 1, 2, 3, 5, 8, 13]
-    zmb_value = [0, 100, 100, 100, 100, 100, 100]
-    # zmb_value = [0, 100, 320, 330, 500, 900, 10000]
+    # zmb_value = [0, 100, 100, 100, 100, 100, 100]
+    zmb_value = [0, 100, 320, 330, 500, 900, 10000]
     # zmb_value = [0, 1, 1, 1, 1, 1, 1]
     # zmb_value = [0, 28, 27, 26, 25, 24, 23]
     zmb_board = [
@@ -102,12 +102,10 @@ def eval_zmb(board: chess.Board) -> float:
         return 0
     else:
         e = (abs(sum1) + abs(sum2)) / (sum2 - sum1)
-    return 0 * e
+    return int(10 * e)
 
 
 def evaluate(board: chess.Board) -> int:
     e = eval_m(board, chess.WHITE) - eval_m(board, chess.BLACK)
-    if board.turn == chess.WHITE:
-        return e  # + eval_zmb(board)
-    else:
-        return e  # - eval_zmb(board)
+    zmb = eval_zmb(board)
+    return e + zmb

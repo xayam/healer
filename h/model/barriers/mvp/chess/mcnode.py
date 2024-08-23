@@ -1,5 +1,5 @@
 import chess
-from helpers import MAX_PLY
+from helpers import MAX_PLY, VALUE_INFINITE
 from limits import Limits
 
 
@@ -39,7 +39,7 @@ class MCTSNode:
         if self.visits == 0:
             return float('inf')
         limits = Limits(0, MAX_PLY, 0)
-        limits.limited["depth"] = 4
+        limits.limited["depth"] = 2
         search.limit = limits
         return search.iterative_deepening(self.state)
         # else:

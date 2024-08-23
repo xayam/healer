@@ -13,12 +13,11 @@ from sys import stdout
 
 class Search:
     def __init__(self) -> None:
-        # self.board = board
+        self.t0 = 0
         # This is our transposition table, it stores positions
         # it is one of the most important parts of a chess engine.
         # It stores results of previously performed searches and it
         # allows to skip parts of the _search tree and order moves.
-        self.t0 = 0
         self.transposition_table = tt.TranspositionTable()
         self.pvLength = [0] * MAX_PLY
         # This is our principal variation table, it stores the best
@@ -99,7 +98,7 @@ class Search:
         """
         if self.check_time():
             return 0
-        # Dont _search higher than MAX_PLY
+        # Don't search higher than MAX_PLY
         if ply >= MAX_PLY:
             return evaluate(state)
         self.pvLength[ply] = ply
@@ -242,8 +241,8 @@ class Search:
             bestmove = self.pvTable[0][0]
             # print info
             now = time.time_ns()
-            stdout.write(self.stats(d, score, now - self.t0) + "\n")
-            stdout.flush()
+            # stdout.write(self.stats(d, score, now - self.t0) + "\n")
+            # stdout.flush()
         # last attempt to get a bestmove
         if bestmove == chess.Move.null():
             bestmove = self.pvTable[0][0]
@@ -353,7 +352,7 @@ class Search:
             + str(self.nodes)
             + " nps "
             + str(int(self.nodes / time_in_seconds))
-            + " time0 "
+            + " time "
             + str(round(time0 / 1_000_000))
             + " pv"
             + self.get_pv()

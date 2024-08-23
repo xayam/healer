@@ -149,7 +149,7 @@ class MCTS:
 
 
 def mcts_best(_chess_state: chess.Board, _search):
-    _mcts = MCTS(_chess_state, iterations=10*len(list(_chess_state.legal_moves)))
+    _mcts = MCTS(_chess_state, iterations=75)
     _move, _score = _mcts.select_move(_chess_state, _search)
     return _move, _score
 
