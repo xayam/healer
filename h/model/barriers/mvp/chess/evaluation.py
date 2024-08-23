@@ -109,12 +109,13 @@ def eval_zmb(board: chess.Board) -> int:
         return 0
     else:
         e = (abs(sum1) + abs(sum2)) / (sum2 - sum1)
-    return int(100 * e)
+    return int(10 * e)
 
 
 def evaluate(board: chess.Board) -> int:
     eval = eval_m(board, chess.WHITE) - eval_m(board, chess.BLACK)
+    # return eval
     if board.turn == chess.WHITE:
-        return eval + eval_zmb(board)
-    else:
         return eval - eval_zmb(board)
+    else:
+        return eval + eval_zmb(board)
