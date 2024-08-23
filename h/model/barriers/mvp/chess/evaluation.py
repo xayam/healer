@@ -114,7 +114,6 @@ def eval_zmb(board: chess.Board) -> int:
 
 def evaluate(board: chess.Board) -> int:
     eval = eval_m(board, chess.WHITE) - eval_m(board, chess.BLACK)
-    # return eval
     if board.turn == chess.WHITE:
         return eval - eval_zmb(board)
     else:
