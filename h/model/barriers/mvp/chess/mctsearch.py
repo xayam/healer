@@ -8,14 +8,15 @@ import cProfile
 from typing import Tuple
 
 import chess
-import search
 from mcnode import MCTSNode
 
 
 class MCTS:
-    def __init__(self, state: chess.Board, iterations: int,
+    def __init__(self, state: chess.Board,
+                 # search,
+                 iterations: int,
                  exploration_constant: float = math.sqrt(2),
-                 depth_limit: int = None, use_opening_book: bool = False,
+                 depth_limit: int = None,
                  cnn=None):
         """ Initialize the MCTS object
         :param state: The initial state of the game
@@ -24,22 +25,23 @@ class MCTS:
                the UCB1 algorithm
         :param depth_limit: The depth limit to use in the algorithm
         :param use_opening_book: Whether to use the opening book """
+        self.state = state
+        self.search = None
         self.iterations = iterations  # The number of iterations to perform
         # The exploration constant, sqrt(2) by default
         self.exploration_constant = exploration_constant
-        self.root = MCTSNode(state)
+        self.root = MCTSNode(self.state)
         self.current_node = self.root
         self.depth_limit = depth_limit
-        self.use_opening_book = use_opening_book
         self.cnn = cnn
 
-    def set_current_node(self, state: chess.Board):
+    def set_current_node(self):
         """ Set the current node to the one corresponding to the given state
 
          :param state: The state to set the current node to"""
         # First look in the children of the current node
         for child in self.current_node.children:
-            if child.state == state:
+            if child.state == self.state:
                 self.current_node = child
                 # print(self.current_node.state())
                 return
@@ -47,15 +49,16 @@ class MCTS:
         queue = deque([self.root])
         while queue:
             node = queue.popleft()
-            if node.state == state and node != self.root and node != self.current_node:
+            if node.state == self.state and node != self.root and \
+                    node != self.current_node:
                 self.current_node = node
                 # print(self.current_node.state())
                 return
             queue.extend(node.children)
-        if not self.current_node.state == state:
-            self.current_node = MCTSNode(state)
+        if not self.current_node.state == self.state:
+            self.current_node = MCTSNode(self.state)
 
-    def _select(self, node: MCTSNode, depth: int, _search) -> MCTSNode:
+    def _select(self, node: MCTSNode, depth: int) -> MCTSNode:
         """ Select the next node to explore using the UCB1 algorithm
          :param node: The node to select from
          :param depth: The depth of the node
@@ -72,11 +75,11 @@ class MCTS:
             if node.state.turn == chess.WHITE:
                 node = max(children,
                            key=lambda c: c.ucb1(self.exploration_constant,
-                                                _search))
+                                                self.search))
             else:
                 node = min(children,
                            key=lambda c: c.ucb1(self.exploration_constant,
-                                                _search))
+                                                self.search))
             depth += 1
         return node
 
@@ -123,12 +126,12 @@ class MCTS:
             node.wins += res
             node = node.parent
 
-    def select_move(self, state: chess.Board, _search) -> Tuple[str, float]:
+    def select_move(self) -> Tuple[str, float]:
         """ Perform the MCTS algorithm and select the best move
          :return: The best move """
-        self.set_current_node(state)
+        self.set_current_node()
         for _ in range(self.iterations):
-            node = self._select(self.current_node, 0, _search)
+            node = self._select(self.current_node, 0)
             if node.not_fully_expanded():
                 node = self._expand(node)
             res = self._simulate(node)
@@ -138,32 +141,32 @@ class MCTS:
         if self.current_node.state.turn == chess.WHITE:
             best_child = max(self.current_node.children,
                              key=lambda c: c.ucb1(self.exploration_constant,
-                                                  _search))
+                                                  self.search))
         else:
             best_child = min(self.current_node.children,
                              key=lambda c: c.ucb1(self.exploration_constant,
-                                                  _search))
+                                                  self.search))
         self.current_node = best_child
         return best_child.move, best_child.ucb1(self.exploration_constant,
-                                                _search)
+                                                self.search)
 
-
-def mcts_best(_chess_state: chess.Board, _search):
-    _mcts = MCTS(_chess_state, iterations=75)
-    _move, _score = _mcts.select_move(_chess_state, _search)
-    return _move, _score
+    def mcts_best(self):
+        _move, _score = self.select_move()
+        return _move, _score
 
 
 if __name__ == "__main__":
     chess_state = chess.Board()
-    search = search.Search()
-    mcts = MCTS(chess_state, iterations=10)
+    # search = search.Search()
+    mcts = MCTS(state=chess_state,
+                # search=search,
+                iterations=10)
     start = time.time()
     move = ""
     while not chess_state.is_game_over():
         pr = cProfile.Profile()
         pr.enable()
-        move, score = mcts.select_move(chess_state, search)
+        move, score = mcts.select_move()
         pr.disable()
         s = io.StringIO()
         sort_by = 'tottime'
@@ -179,7 +182,7 @@ if __name__ == "__main__":
         if move:
             m = chess.Move.from_uci(move)
             chess_state.push(m)
-            mcts.set_current_node(chess_state)
+            mcts.set_current_node()
         else:
             break
         print(move, score)

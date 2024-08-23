@@ -1,17 +1,15 @@
-import search
-
-# External
 from sys import stdout
 import chess
 
-from model.barriers.mvp.chess.mctsearch import mcts_best
+from helpers import ITERATIONS
+from mctsearch import MCTS
 
 
 class UCI:
     def __init__(self) -> None:
         self.out = stdout
         self.state = chess.Board()
-        self.search = search.Search()
+        self.search = None
         self.thread: None
 
     def output(self, s) -> None:
@@ -49,7 +47,8 @@ class UCI:
         pass
 
     def eval(self) -> None:
-        _, score = mcts_best(self.state, self.search)
+        mcts = MCTS(state=self.state, iterations=ITERATIONS)
+        _, score = mcts.mcts_best()
         self.output(score)
 
     def process_command(self, inp: str) -> None:
@@ -107,7 +106,8 @@ class UCI:
             #     limits.limited["time0"] += (
             #         int(splitted[splitted.index(ourTimeIncStr) + 1]) / 2
             #     )
-            bestmove, _ = mcts_best(self.state, self.search)
+            mcts = MCTS(state=self.state, iterations=ITERATIONS)
+            bestmove, _ = mcts.mcts_best()
             stdout.write("bestmove " + str(bestmove) + "\n")
             stdout.flush()
         elif splitted[0] == "eval":

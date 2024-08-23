@@ -231,7 +231,8 @@ class Search:
         # Start measuring time0
         self.t0 = time.time_ns()
         # Iterative Deepening Loop
-        for d in range(1, self.limit.limited["depth"] + 1):
+        for d in range(self.limit.limited["depth"],
+                       self.limit.limited["depth"] + 1):
             score = self.ab_search(state,
                                    -VALUE_INFINITE, VALUE_INFINITE, d, 0)
             # Dont use completed depths result

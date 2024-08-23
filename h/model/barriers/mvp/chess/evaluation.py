@@ -108,4 +108,4 @@ def eval_zmb(board: chess.Board) -> int:
 def evaluate(board: chess.Board) -> int:
     e = eval_m(board, chess.WHITE) - eval_m(board, chess.BLACK)
     zmb = eval_zmb(board)
-    return e + zmb
+    return e
