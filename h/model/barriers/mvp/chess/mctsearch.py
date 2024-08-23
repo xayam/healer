@@ -170,7 +170,7 @@ if __name__ == "__main__":
         ps.print_stats()
         # print(s.getvalue())
         # print(move)
-        # print(f"\nTime taken on average/game: {(time.time() - start)/20}")
+        # print(f"\nTime taken on average/game: {(time0.time0() - start)/20}")
         # print(move)
         print()
         print(chess_state)

@@ -18,6 +18,7 @@ class Search:
         # it is one of the most important parts of a chess engine.
         # It stores results of previously performed searches and it
         # allows to skip parts of the search tree and order moves.
+        self.t0 = 0
         self.transposition_table = tt.TranspositionTable()
         self.pvLength = [0] * MAX_PLY
         # This is our principal variation table, it stores the best
@@ -46,7 +47,7 @@ class Search:
         captures and checks. It is needed to avoid the horizon effect.
         We will continue to search until we reach a quiet position.
         """
-        if self.stop or self.checkTime():
+        if self.stop or self.check_time():
             return 0
         # Don't search higher than MAX_PLY
         if ply >= MAX_PLY:
@@ -61,7 +62,7 @@ class Search:
         # to reduce the size of the search tree
         moves = sorted(
             state.generate_legal_captures(),
-            key=lambda m: self.scoreQMove(state, m),
+            key=lambda m: self.score_qmove(state, m),
             reverse=True,
         )
         # Loop over all legal captures
@@ -94,16 +95,16 @@ class Search:
         Alpha Beta Search, this is the main search function.
         It searches the tree recursively and returns the best score.
         This function will be called with increasing depth until
-        the time limit is reached or the maximum depth is reached.
+        the time0 limit is reached or the maximum depth is reached.
         """
-        if self.checkTime():
+        if self.check_time():
             return 0
         # Dont search higher than MAX_PLY
         if ply >= MAX_PLY:
             return evaluate(state)
         self.pvLength[ply] = ply
         RootNode = ply == 0
-        hashKey = self.getHash(state)
+        hashKey = self.get_hash(state)
         if not RootNode:
             if self.is_repetition(state, hashKey):
                 # slight draw bias
@@ -150,10 +151,10 @@ class Search:
         bestMove = chess.Move.null()
         madeMoves = 0
         # Sort the moves, the highest score should come first
-        # The ttMove should be first one searched, incase we have a hit
+        # The ttmove should be first one searched, incase we have a hit
         moves = sorted(
             state.legal_moves,
-            key=lambda m: self.scoreMove(state, m, ttMove),
+            key=lambda m: self.score_move(state, m, ttMove),
             reverse=True,
         )
         for move in moves:
@@ -197,7 +198,7 @@ class Search:
         # No moves were played so its checkmate or stalemate
         # Instead checking if the position is a checkmate
         # during evaluate we can do it here
-        # and save computation time
+        # and save computation time0
         if madeMoves == 0:
             if inCheck:
                 return mated_in(ply)
@@ -212,7 +213,7 @@ class Search:
                 bound = tt.Flag.EXACTBOUND
             else:
                 bound = tt.Flag.UPPERBOUND
-        if not self.checkTime():
+        if not self.check_time():
             # Store in tt
             self.transposition_table.storeEntry(
                 hashKey, depth, bound, bestScore, bestMove, ply
@@ -222,20 +223,20 @@ class Search:
     def iterative_deepening(self, state) -> int:
         """
         Iterative Deepening, this will call the ab_search function
-        with increasing depth until the time limit is reached or
+        with increasing depth until the time0 limit is reached or
         the maximum depth is reached.
         """
         self.nodes = 0
         score = -VALUE_INFINITE
         bestmove = chess.Move.null()
-        # Start measuring time
+        # Start measuring time0
         self.t0 = time.time_ns()
         # Iterative Deepening Loop
         for d in range(1, self.limit.limited["depth"] + 1):
             score = self.ab_search(state,
                                    -VALUE_INFINITE, VALUE_INFINITE, d, 0)
             # Dont use completed depths result
-            if self.stop or self.checkTime(True):
+            if self.stop or self.check_time(True):
                 break
             # Save bestmove
             bestmove = self.pvTable[0][0]
@@ -284,22 +285,22 @@ class Search:
         return mvvlva[victim][attacker]
 
     # assign a score to moves in q_search
-    def scoreQMove(self, state, move: chess.Move) -> int:
+    def score_qmove(self, state, move: chess.Move) -> int:
         return self.mvvlva(state, move)
 
     # assign a score to normal moves
-    def scoreMove(self, state, move: chess.Move, ttMove: chess.Move) -> int:
-        if move == ttMove:
+    def score_move(self, state, move: chess.Move, ttmove: chess.Move) -> int:
+        if move == ttmove:
             return 1_000_000
         elif state.is_capture(move):
             # make sure captures are ordered higher than quiets
             return 32_000 + self.mvvlva(state, move)
         return self.htable[state.turn][move.from_square][move.to_square]
 
-    def getHash(self, state) -> int:
+    def get_hash(self, state) -> int:
         return chess.polyglot.zobrist_hash(state)
 
-    def checkTime(self, iter: bool = False) -> bool:
+    def check_time(self, itera: bool = False) -> bool:
         if self.stop:
             return True
 
@@ -308,14 +309,14 @@ class Search:
             and self.nodes >= self.limit.limited["nodes"]
         ):
             return True
-        if self.checks > 0 and not iter:
+        if self.checks > 0 and not itera:
             self.checks -= 1
             return False
         self.checks = CHECK_RATE
-        if self.limit.limited["time"] == 0:
+        if self.limit.limited["time0"] == 0:
             return False
         timeNow = time.time_ns()
-        if (timeNow - self.t0) / 1_000_000 > self.limit.limited["time"]:
+        if (timeNow - self.t0) / 1_000_000 > self.limit.limited["time0"]:
             return True
         return False
 
@@ -340,8 +341,8 @@ class Search:
             return "cp " + str(score)
 
     # Print UCI Info
-    def stats(self, depth: int, score: int, time: int) -> str:
-        time_in_ms = int(time / 1_000_000)
+    def stats(self, depth: int, score: int, time0: int) -> str:
+        time_in_ms = int(time0 / 1_000_000)
         time_in_seconds = max(1, time_in_ms / 1_000)
         info = (
             "info depth "
@@ -352,8 +353,8 @@ class Search:
             + str(self.nodes)
             + " nps "
             + str(int(self.nodes / time_in_seconds))
-            + " time "
-            + str(round(time / 1_000_000))
+            + " time0 "
+            + str(round(time0 / 1_000_000))
             + " pv"
             + self.get_pv()
         )
@@ -367,8 +368,8 @@ class Search:
         self.stop = False
         self.checks = CHECK_RATE
         self.hashHistory = []
-        self.htable = [[[0 for x in range(64)]
-                        for y in range(64)] for z in range(2)]
+        self.htable = [[[0 for _ in range(64)]
+                        for _ in range(64)] for _ in range(2)]
 
 
 # Run search.py instead of main.py if you want to profile it!

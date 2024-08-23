@@ -85,7 +85,7 @@ class UCI:
             self.search.hashHistory.clear()
             for move in movelist:
                 self.state.push_uci(move)
-                self.search.hashHistory.append(self.search.getHash(self.state))
+                self.search.hashHistory.append(self.search.get_hash(self.state))
         elif splitted[0] == "print":
             print(self.state)
         elif splitted[0] == "go":
@@ -99,12 +99,12 @@ class UCI:
             # ourTimeIncStr = "winc" if self.board.turn == chess.WHITE else "binc"
             #
             # if ourTimeStr in input:
-            #     limits.limited["time"] = (
+            #     limits.limited["time0"] = (
             #         int(splitted[splitted.index(ourTimeStr) + 1]) / 20
             #     )
             #
             # if ourTimeIncStr in input:
-            #     limits.limited["time"] += (
+            #     limits.limited["time0"] += (
             #         int(splitted[splitted.index(ourTimeIncStr) + 1]) / 2
             #     )
             bestmove, _ = mcts_best(self.state, self.search)

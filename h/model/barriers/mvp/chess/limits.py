@@ -5,4 +5,4 @@ class Limits:
         depth: int,
         time: int,
     ) -> None:
-        self.limited = {"nodes": nodes, "depth": depth, "time": time}
+        self.limited = {"nodes": nodes, "depth": depth, "time0": time}
