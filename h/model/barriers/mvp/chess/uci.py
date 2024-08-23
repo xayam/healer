@@ -55,7 +55,7 @@ class UCI:
         pass
 
     def eval(self) -> None:
-        score, _ = mcts_best(self.board)
+        _, score = mcts_best(self.board)
         self.output(score)
 
     def processCommand(self, input: str) -> None:
@@ -100,29 +100,29 @@ class UCI:
         elif splitted[0] == "print":
             print(self.board)
         elif splitted[0] == "go":
-            limits = Limits(0, MAX_PLY, 0)
-
-            l = ["depth", "nodes"]
-            for limit in l:
-                if limit in splitted:
-                    limits.limited[limit] = int(splitted[splitted.index(limit) + 1])
-
-            ourTimeStr = "wtime" if self.board.turn == chess.WHITE else "btime"
-            ourTimeIncStr = "winc" if self.board.turn == chess.WHITE else "binc"
-
-            if ourTimeStr in input:
-                limits.limited["time"] = (
-                    int(splitted[splitted.index(ourTimeStr) + 1]) / 20
-                )
-
-            if ourTimeIncStr in input:
-                limits.limited["time"] += (
-                    int(splitted[splitted.index(ourTimeIncStr) + 1]) / 2
-                )
-            self.search.limit = limits
+            # limits = Limits(0, MAX_PLY, 0)
+            #
+            # l = ["depth", "nodes"]
+            # for limit in l:
+            #     if limit in splitted:
+            #         limits.limited[limit] = int(splitted[splitted.index(limit) + 1])
+            #
+            # ourTimeStr = "wtime" if self.board.turn == chess.WHITE else "btime"
+            # ourTimeIncStr = "winc" if self.board.turn == chess.WHITE else "binc"
+            #
+            # if ourTimeStr in input:
+            #     limits.limited["time"] = (
+            #         int(splitted[splitted.index(ourTimeStr) + 1]) / 20
+            #     )
+            #
+            # if ourTimeIncStr in input:
+            #     limits.limited["time"] += (
+            #         int(splitted[splitted.index(ourTimeIncStr) + 1]) / 2
+            #     )
+            # self.search.limit = limits
             # self.thread = Thread(target=self.search.iterativeDeepening)
             # self.thread.start()
-            _, bestmove = mcts_best(self.board)
+            bestmove, _ = mcts_best(self.board)
             # stdout.write("info " + str(score) + "\n")
             stdout.write("bestmove " + str(bestmove) + "\n")
             stdout.flush()

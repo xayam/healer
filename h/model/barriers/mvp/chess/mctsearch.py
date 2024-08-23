@@ -69,7 +69,10 @@ class MCTS:
             children = [child for child in children if child.alpha <= node.beta]
             if len(children) == 0:
                 return node
-            node = max(children, key=lambda c: c.ucb1(self.exploration_constant))
+            if node.state.turn == chess.WHITE:
+                node = max(children, key=lambda c: c.ucb1(self.exploration_constant))
+            else:
+                node = min(children, key=lambda c: c.ucb1(self.exploration_constant))
             depth += 1
         return node
 
@@ -93,32 +96,16 @@ class MCTS:
     @staticmethod
     def _simulate(node: MCTSNode) -> int:
         """ Simulate the game to a terminal state and return the result
-
          :param node: The node to simulate from
          :return: The result of the simulation """
         state = node.state.copy()
-        # start = time.time()
         r = {"1-0": 1, "0-1": 0, "1/2-1/2": 0.5}
         while not state.is_game_over():
-            # hashtable_result = self.hashtable.lookup(state.fen())
-            # if hashtable_result:
-            #     value, move = hashtable_result
-            #     if state.board.turn == "w":
-            #         if value >= node.beta:
-            #             return -1
-            #         node.alpha = max(node.alpha, value)
-            #     else:
-            #         if value <= node.alpha:
-            #             return 1
-            #         node.beta = min(node.beta, value)
-            # else:
             moves = list(state.legal_moves)
             moving = random.choice(moves)
             state.push(moving)
             if state.is_game_over():
                 return r[state.result()]
-        # end = time.time()
-        # print(end - start)
         return r[state.result()]
 
     @staticmethod
@@ -144,26 +131,20 @@ class MCTS:
             self._backpropagate(node, result)
         if not self.current_node.children:
             return "", 0.0
-        best_child = max(self.current_node.children, key=lambda c: c.ucb1(self.exploration_constant))
+        if self.current_node.state.turn == chess.WHITE:
+            best_child = max(self.current_node.children,
+                             key=lambda c: c.ucb1(self.exploration_constant))
+        else:
+            best_child = min(self.current_node.children,
+                             key=lambda c: c.ucb1(self.exploration_constant))
         self.current_node = best_child
         return best_child.move, best_child.ucb1(self.exploration_constant)
 
 
-def mcts_best(chess_state: chess.Board):
-    mcts = MCTS(chess_state, iterations=20)
-    moves = chess_state.legal_moves
-    move_scores = []
-    for move in moves:
-        chess_state.push(move)
-        _, score = mcts.select_move(chess_state)
-        chess_state.pop()
-        move_scores.append([score, move])
-    # if chess_state.turn == chess.WHITE:
-    best = max(move_scores, key=lambda x: x[0])
-    # else:
-    #     best = min(move_scores, key=lambda x: x[0])
-    # print(move_scores)
-    return best[0], best[1]
+def mcts_best(_chess_state: chess.Board):
+    _mcts = MCTS(_chess_state, iterations=10*len(list(_chess_state.legal_moves)))
+    _move, _score = _mcts.select_move(_chess_state)
+    return _move, _score
 
 
 if __name__ == "__main__":
