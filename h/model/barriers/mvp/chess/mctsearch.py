@@ -2,13 +2,13 @@ import io
 import pstats
 import math
 import random
-import sys
 from collections import deque
 import time
 import cProfile
 from typing import Tuple
 
 import chess
+import search
 from mcnode import MCTSNode
 
 
@@ -55,7 +55,7 @@ class MCTS:
         if not self.current_node.state == state:
             self.current_node = MCTSNode(state)
 
-    def _select(self, node: MCTSNode, depth: int, search) -> MCTSNode:
+    def _select(self, node: MCTSNode, depth: int, _search) -> MCTSNode:
         """ Select the next node to explore using the UCB1 algorithm
          :param node: The node to select from
          :param depth: The depth of the node
@@ -72,11 +72,11 @@ class MCTS:
             if node.state.turn == chess.WHITE:
                 node = max(children,
                            key=lambda c: c.ucb1(self.exploration_constant,
-                                                search))
+                                                _search))
             else:
                 node = min(children,
                            key=lambda c: c.ucb1(self.exploration_constant,
-                                                search))
+                                                _search))
             depth += 1
         return node
 
@@ -113,39 +113,39 @@ class MCTS:
         return r[state.result()]
 
     @staticmethod
-    def _backpropagate(node: MCTSNode, result: int):
+    def _backpropagate(node: MCTSNode, res: int):
         """ Backpropagate the result of the
             simulation from the terminal node to the root node
          :param node: The terminal node
-         :param result: The result of the simulation"""
+         :param res: The result of the simulation"""
         while node is not None:
             node.visits += 1
-            node.wins += result
+            node.wins += res
             node = node.parent
 
-    def select_move(self, state: chess.Board, search) -> Tuple[str, float]:
+    def select_move(self, state: chess.Board, _search) -> Tuple[str, float]:
         """ Perform the MCTS algorithm and select the best move
          :return: The best move """
         self.set_current_node(state)
         for _ in range(self.iterations):
-            node = self._select(self.current_node, 0, search)
+            node = self._select(self.current_node, 0, _search)
             if node.not_fully_expanded():
                 node = self._expand(node)
-            result = self._simulate(node)
-            self._backpropagate(node, result)
+            res = self._simulate(node)
+            self._backpropagate(node, res)
         if not self.current_node.children:
             return "", 0.0
         if self.current_node.state.turn == chess.WHITE:
             best_child = max(self.current_node.children,
                              key=lambda c: c.ucb1(self.exploration_constant,
-                                                  search))
+                                                  _search))
         else:
             best_child = min(self.current_node.children,
                              key=lambda c: c.ucb1(self.exploration_constant,
-                                                  search))
+                                                  _search))
         self.current_node = best_child
         return best_child.move, best_child.ucb1(self.exploration_constant,
-                                                search)
+                                                _search)
 
 
 def mcts_best(_chess_state: chess.Board, _search):
@@ -156,13 +156,14 @@ def mcts_best(_chess_state: chess.Board, _search):
 
 if __name__ == "__main__":
     chess_state = chess.Board()
+    search = search.Search()
     mcts = MCTS(chess_state, iterations=10)
     start = time.time()
     move = ""
     while not chess_state.is_game_over():
         pr = cProfile.Profile()
         pr.enable()
-        move, score = mcts.select_move(chess_state)
+        move, score = mcts.select_move(chess_state, search)
         pr.disable()
         s = io.StringIO()
         sort_by = 'tottime'

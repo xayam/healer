@@ -17,23 +17,23 @@ class Search:
         # This is our transposition table, it stores positions
         # it is one of the most important parts of a chess engine.
         # It stores results of previously performed searches and it
-        # allows to skip parts of the search tree and order moves.
+        # allows to skip parts of the _search tree and order moves.
         self.t0 = 0
         self.transposition_table = tt.TranspositionTable()
         self.pvLength = [0] * MAX_PLY
         # This is our principal variation table, it stores the best
         # moves for each depth. It is used to print the best line
-        # after the search is completed.
+        # after the _search is completed.
         self.pvTable = [[chess.Move.null()] * MAX_PLY for _ in range(MAX_PLY)]
         # Total nodes searched
         self.nodes = 0
-        # Current limits for the search
+        # Current limits for the _search
         self.limit = Limits(0, MAX_PLY, 0)
-        # True when the search is stopped/aborted
+        # True when the _search is stopped/aborted
         self.stop = False
         # Time checking is expensive and we dont want to do it every node
         self.checks = CHECK_RATE
-        # Keeps track of the zobrist hashes encountered during the search
+        # Keeps track of the zobrist hashes encountered during the _search
         # Used to efficiently detect repetitions
         self.hashHistory = []
         # History Table
@@ -43,13 +43,13 @@ class Search:
 
     def q_search(self, state, alpha: int, beta: int, ply: int) -> int:
         """
-        Quiescence Search, this is a special search that only searches
+        Quiescence Search, this is a special _search that only searches
         captures and checks. It is needed to avoid the horizon effect.
-        We will continue to search until we reach a quiet position.
+        We will continue to _search until we reach a quiet position.
         """
         if self.stop or self.check_time():
             return 0
-        # Don't search higher than MAX_PLY
+        # Don't _search higher than MAX_PLY
         if ply >= MAX_PLY:
             return evaluate(state)
         # staticEval
@@ -59,7 +59,7 @@ class Search:
         if bestValue > alpha:
             alpha = bestValue
         # Sort the moves, the highest score should come first,
-        # to reduce the size of the search tree
+        # to reduce the size of the _search tree
         moves = sorted(
             state.generate_legal_captures(),
             key=lambda m: self.score_qmove(state, m),
@@ -92,14 +92,14 @@ class Search:
     def ab_search(self, state: chess.Board,
                   alpha: int, beta: int, depth: int, ply: int) -> int:
         """
-        Alpha Beta Search, this is the main search function.
+        Alpha Beta Search, this is the main _search function.
         It searches the tree recursively and returns the best score.
         This function will be called with increasing depth until
         the time0 limit is reached or the maximum depth is reached.
         """
         if self.check_time():
             return 0
-        # Dont search higher than MAX_PLY
+        # Dont _search higher than MAX_PLY
         if ply >= MAX_PLY:
             return evaluate(state)
         self.pvLength[ply] = ply
@@ -360,7 +360,7 @@ class Search:
         )
         return info
 
-    # Reset search stuff
+    # Reset _search stuff
     def reset(self) -> None:
         self.pvLength[0] = 0
         self.nodes = 0
@@ -372,7 +372,7 @@ class Search:
                         for _ in range(64)] for _ in range(2)]
 
 
-# Run search.py instead of main.py if you want to profile it!
+# Run _search.py instead of main.py if you want to profile it!
 if __name__ == "__main__":
     board = chess.Board()
     search = Search()

@@ -1,8 +1,6 @@
-import math
 import chess
-from evaluation import evaluate
-from model.barriers.mvp.chess.helpers import MAX_PLY
-from model.barriers.mvp.chess.limits import Limits
+from helpers import MAX_PLY
+from limits import Limits
 
 
 class MCTSNode:
@@ -36,10 +34,10 @@ class MCTSNode:
     def ucb1(self, exploration_constant: float, search) -> float:
         """ Apply the UCT formula (Upper Confidence Bound applied to Trees)
          :param exploration_constant: The exploration constant to use
+         :param search
          :return: The UCT value"""
         if self.visits == 0:
             return float('inf')
-
         limits = Limits(0, MAX_PLY, 0)
         limits.limited["depth"] = 4
         search.limit = limits

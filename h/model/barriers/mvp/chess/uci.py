@@ -1,4 +1,4 @@
-import search as Search
+import search
 
 # External
 from sys import stdout
@@ -11,7 +11,7 @@ class UCI:
     def __init__(self) -> None:
         self.out = stdout
         self.state = chess.Board()
-        self.search = Search.Search()
+        self.search = search.Search()
         self.thread: None
 
     def output(self, s) -> None:
@@ -91,8 +91,8 @@ class UCI:
         elif splitted[0] == "go":
             # limits = Limits(0, MAX_PLY, 0)
             # limits.limited["depth"] = 4
-            # self.search.limit = limits
-            # self.thread = Thread(target=self.search.iterative_deepening)
+            # self._search.limit = limits
+            # self.thread = Thread(target=self._search.iterative_deepening)
             # self.thread.start()
             #
             # ourTimeStr = "wtime" if self.board.turn == chess.WHITE else "btime"
