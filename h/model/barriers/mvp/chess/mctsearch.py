@@ -149,8 +149,8 @@ class MCTS:
         return best_child.move, best_child.ucb1(self.exploration_constant)
 
 
-def get_best(chess_state: chess.Board):
-    mcts = MCTS(chess_state, iterations=10)
+def mcts_best(chess_state: chess.Board):
+    mcts = MCTS(chess_state, iterations=20)
     moves = chess_state.legal_moves
     move_scores = []
     for move in moves:
@@ -158,10 +158,11 @@ def get_best(chess_state: chess.Board):
         _, score = mcts.select_move(chess_state)
         chess_state.pop()
         move_scores.append([score, move])
-    if chess_state.turn == chess.WHITE:
-        best = max(move_scores, key=lambda x: x[0])
-    else:
-        best = min(move_scores, key=lambda x: x[0])
+    # if chess_state.turn == chess.WHITE:
+    best = max(move_scores, key=lambda x: x[0])
+    # else:
+    #     best = min(move_scores, key=lambda x: x[0])
+    print(move_scores)
     return best[0], best[1]
 
 

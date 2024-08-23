@@ -8,17 +8,13 @@ from model.barriers.mvp.chess.psqt import piece_values, psqt_values
 
 def eval_m(board: chess.Board, color: chess.Color) -> int:
     occupied = board.occupied_co[color]
-
     material = 0
     psqt = 0
-
     # loop over all set bits
     while occupied:
         # find the least significant bit
         square = lsb(occupied)
-
         piece = board.piece_type_at(square)
-
         # add material
         material += piece_values[piece]
 
@@ -28,14 +24,12 @@ def eval_m(board: chess.Board, color: chess.Color) -> int:
             if color == chess.BLACK
             else psqt_values[piece][square]
         )
-
         # remove lsb
         occupied = poplsb(occupied)
-
     return material + psqt
 
 
-def eval_zmb(board: chess.Board) -> int:
+def eval_zmb(board: chess.Board) -> float:
     # zmb_value = [0, 6, 5, 4, 3, 2, 1]
     # zmb_value = [0, 1, 2, 3, 4, 5, 6]
     # zmb_value = [0, 1, 2, 3, 5, 8, 13]
@@ -109,12 +103,14 @@ def eval_zmb(board: chess.Board) -> int:
         return 0
     else:
         e = (abs(sum1) + abs(sum2)) / (sum2 - sum1)
-    return int(10 * e)
+    return 1 * e
 
 
-def evaluate(board: chess.Board) -> int:
-    eval = eval_m(board, chess.WHITE) - eval_m(board, chess.BLACK)
+def evaluate(board: chess.Board) -> float:
+    e = eval_m(board, chess.WHITE) - eval_m(board, chess.BLACK)
     if board.turn == chess.WHITE:
-        return eval - eval_zmb(board)
+        # return e
+        return e + eval_zmb(board)
     else:
-        return eval + eval_zmb(board)
+        # return -e
+        return e + eval_zmb(board)

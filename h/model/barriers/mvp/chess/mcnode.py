@@ -38,6 +38,10 @@ class MCTSNode:
         if self.visits == 0:
             return float('inf')
         e = evaluate(self.state)
+        # if self.state.turn == chess.WHITE:
+        #     expr = e >= 0.5
+        # else:
+        #     expr = e <= -0.5
         if e != 0:
             return e
         else:

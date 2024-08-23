@@ -1,3 +1,5 @@
+import sys
+
 import search as Search
 from evaluation import evaluate
 from helpers import *
@@ -7,6 +9,8 @@ from limits import *
 from sys import stdout
 from threading import Thread
 import chess
+
+from model.barriers.mvp.chess.mctsearch import mcts_best
 
 
 class UCI:
@@ -37,8 +41,8 @@ class UCI:
                 pass
 
     def uci(self) -> None:
-        self.output("id name python-chess-engine")
-        self.output("id author Max, aka Disservin")
+        self.output("id name xasifaz")
+        self.output("id author Aleksey Belyanin, xayam@yandex.ru")
         self.output("")
         self.output("option name Move Overhead type spin default 5 min 0 max 5000")
         self.output("option name Ponder type check default false")
@@ -51,7 +55,8 @@ class UCI:
         pass
 
     def eval(self) -> None:
-        self.output(evaluate(self.board))
+        score, _ = mcts_best(self.board)
+        self.output(score)
 
     def processCommand(self, input: str) -> None:
         splitted = input.split(" ")
@@ -114,10 +119,12 @@ class UCI:
                 limits.limited["time"] += (
                     int(splitted[splitted.index(ourTimeIncStr) + 1]) / 2
                 )
-
             self.search.limit = limits
-
-            self.thread = Thread(target=self.search.iterativeDeepening)
-            self.thread.start()
+            # self.thread = Thread(target=self.search.iterativeDeepening)
+            # self.thread.start()
+            _, bestmove = mcts_best(self.board)
+            # stdout.write("info " + str(score) + "\n")
+            stdout.write("bestmove " + str(bestmove) + "\n")
+            stdout.flush()
         elif splitted[0] == "eval":
             return self.eval()
