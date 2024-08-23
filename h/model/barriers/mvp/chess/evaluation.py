@@ -3,35 +3,44 @@ import sys
 from helpers import *
 import chess
 
-from model.barriers.mvp.chess.psqt import piece_values
+from model.barriers.mvp.chess.psqt import piece_values, psqt_values
 
 
-def eval_material(board: chess.Board) -> int:
+def eval_m(board: chess.Board, color: chess.Color) -> int:
+    occupied = board.occupied_co[color]
+
     material = 0
-    occupied = board.occupied_co[False]
+    psqt = 0
+
+    # loop over all set bits
     while occupied:
+        # find the least significant bit
         square = lsb(occupied)
+
         piece = board.piece_type_at(square)
-        material -= piece_values[piece]
-        occupied = poplsb(occupied)
-    occupied = board.occupied_co[True]
-    while occupied:
-        square = lsb(occupied)
-        piece = board.piece_type_at(square)
+
+        # add material
         material += piece_values[piece]
+
+        # add piece square table value
+        psqt += (
+            list(reversed(psqt_values[piece]))[square]
+            if color == chess.BLACK
+            else psqt_values[piece][square]
+        )
+
+        # remove lsb
         occupied = poplsb(occupied)
-    # print(board)
-    # print(material)
-    # input()
-    return material
+
+    return material + psqt
 
 
 def eval_zmb(board: chess.Board) -> int:
-    zmb_value = [0, 6, 5, 4, 3, 2, 1]
+    # zmb_value = [0, 6, 5, 4, 3, 2, 1]
     # zmb_value = [0, 1, 2, 3, 4, 5, 6]
     # zmb_value = [0, 1, 2, 3, 5, 8, 13]
     # zmb_value = [0, 100, 100, 100, 100, 100, 100]
-    # zmb_value = [0, 10, 32, 33, 50, 90, 1000]
+    zmb_value = [0, 1, 3, 3, 5, 9, 39]
     # zmb_value = [0, 1, 1, 1, 1, 1, 1]
     # zmb_value = [0, 28, 27, 26, 25, 24, 23]
     zmb_board = [
@@ -104,7 +113,8 @@ def eval_zmb(board: chess.Board) -> int:
 
 
 def evaluate(board: chess.Board) -> int:
-    e = eval_material(board) + eval_zmb(board)
-    if board.turn == chess.BLACK:
-        return -e
-    return e
+    eval = eval_m(board, chess.WHITE) - eval_m(board, chess.BLACK)
+    if board.turn == chess.WHITE:
+        return eval + eval_zmb(board)
+    else:
+        return eval - eval_zmb(board)
