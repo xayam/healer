@@ -17,7 +17,8 @@ class UCI:
         self.out.flush()
 
     def stop(self) -> None:
-        self.search.stop = True
+        pass
+        # self.search.stop = True
         # if self.thread is not None:
         #     try:
         #         self.thread.join()
@@ -25,7 +26,8 @@ class UCI:
         #         pass
 
     def quit(self) -> None:
-        self.search.stop = True
+        pass
+        # self.search.stop = True
         # if self.thread is not None:
         #     try:
         #         self.thread.join()
@@ -88,24 +90,6 @@ class UCI:
         elif splitted[0] == "print":
             print(self.state)
         elif splitted[0] == "go":
-            # limits = Limits(0, MAX_PLY, 0)
-            # limits.limited["depth"] = 4
-            # self._search.limit = limits
-            # self.thread = Thread(target=self._search.iterative_deepening)
-            # self.thread.start()
-            #
-            # ourTimeStr = "wtime" if self.board.turn == chess.WHITE else "btime"
-            # ourTimeIncStr = "winc" if self.board.turn == chess.WHITE else "binc"
-            #
-            # if ourTimeStr in input:
-            #     limits.limited["time0"] = (
-            #         int(splitted[splitted.index(ourTimeStr) + 1]) / 20
-            #     )
-            #
-            # if ourTimeIncStr in input:
-            #     limits.limited["time0"] += (
-            #         int(splitted[splitted.index(ourTimeIncStr) + 1]) / 2
-            #     )
             mcts = MCTS(state=self.state, iterations=ITERATIONS)
             bestmove, _ = mcts.mcts_best()
             stdout.write("bestmove " + str(bestmove) + "\n")
