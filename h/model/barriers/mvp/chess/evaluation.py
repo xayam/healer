@@ -105,7 +105,7 @@ def eval_zmb(board: chess.Board) -> float:
     return 0 * e
 
 
-def evaluate(board: chess.Board) -> float:
+def evaluate(board: chess.Board) -> int:
     e = eval_m(board, chess.WHITE) - eval_m(board, chess.BLACK)
     if board.turn == chess.WHITE:
         return e  # + eval_zmb(board)

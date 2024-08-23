@@ -6,7 +6,7 @@ def main() -> None:
 
     while True:
         command = input()
-        uciLoop.processCommand(command)
+        uciLoop.process_command(command)
 
         if command == "quit":
             break

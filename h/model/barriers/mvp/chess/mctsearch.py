@@ -55,7 +55,7 @@ class MCTS:
         if not self.current_node.state == state:
             self.current_node = MCTSNode(state)
 
-    def _select(self, node: MCTSNode, depth: int) -> MCTSNode:
+    def _select(self, node: MCTSNode, depth: int, search) -> MCTSNode:
         """ Select the next node to explore using the UCB1 algorithm
          :param node: The node to select from
          :param depth: The depth of the node
@@ -70,9 +70,13 @@ class MCTS:
             if len(children) == 0:
                 return node
             if node.state.turn == chess.WHITE:
-                node = max(children, key=lambda c: c.ucb1(self.exploration_constant))
+                node = max(children,
+                           key=lambda c: c.ucb1(self.exploration_constant,
+                                                search))
             else:
-                node = min(children, key=lambda c: c.ucb1(self.exploration_constant))
+                node = min(children,
+                           key=lambda c: c.ucb1(self.exploration_constant,
+                                                search))
             depth += 1
         return node
 
@@ -119,12 +123,12 @@ class MCTS:
             node.wins += result
             node = node.parent
 
-    def select_move(self, state: chess.Board) -> Tuple[str, float]:
+    def select_move(self, state: chess.Board, search) -> Tuple[str, float]:
         """ Perform the MCTS algorithm and select the best move
          :return: The best move """
         self.set_current_node(state)
         for _ in range(self.iterations):
-            node = self._select(self.current_node, 0)
+            node = self._select(self.current_node, 0, search)
             if node.not_fully_expanded():
                 node = self._expand(node)
             result = self._simulate(node)
@@ -133,17 +137,20 @@ class MCTS:
             return "", 0.0
         if self.current_node.state.turn == chess.WHITE:
             best_child = max(self.current_node.children,
-                             key=lambda c: c.ucb1(self.exploration_constant))
+                             key=lambda c: c.ucb1(self.exploration_constant,
+                                                  search))
         else:
             best_child = min(self.current_node.children,
-                             key=lambda c: c.ucb1(self.exploration_constant))
+                             key=lambda c: c.ucb1(self.exploration_constant,
+                                                  search))
         self.current_node = best_child
-        return best_child.move, best_child.ucb1(self.exploration_constant)
+        return best_child.move, best_child.ucb1(self.exploration_constant,
+                                                search)
 
 
-def mcts_best(_chess_state: chess.Board):
+def mcts_best(_chess_state: chess.Board, _search):
     _mcts = MCTS(_chess_state, iterations=10*len(list(_chess_state.legal_moves)))
-    _move, _score = _mcts.select_move(_chess_state)
+    _move, _score = _mcts.select_move(_chess_state, _search)
     return _move, _score
 
 

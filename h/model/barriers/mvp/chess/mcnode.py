@@ -1,6 +1,8 @@
 import math
 import chess
 from evaluation import evaluate
+from model.barriers.mvp.chess.helpers import MAX_PLY
+from model.barriers.mvp.chess.limits import Limits
 
 
 class MCTSNode:
@@ -31,15 +33,17 @@ class MCTSNode:
          :return: True if the node has not been fully expanded, False otherwise"""
         return len(self.children) < len(list(self.state.generate_legal_moves()))
 
-    def ucb1(self, exploration_constant: float) -> float:
+    def ucb1(self, exploration_constant: float, search) -> float:
         """ Apply the UCT formula (Upper Confidence Bound applied to Trees)
          :param exploration_constant: The exploration constant to use
          :return: The UCT value"""
         if self.visits == 0:
             return float('inf')
-        e = evaluate(self.state)
-        # if e != 0:
-        return e
+
+        limits = Limits(0, MAX_PLY, 0)
+        limits.limited["depth"] = 4
+        search.limit = limits
+        return search.iterativeDeepening(self.state)
         # else:
         #     return self.wins / self.visits + exploration_constant * \
         #         math.sqrt(math.log(self.parent.visits) / self.visits)

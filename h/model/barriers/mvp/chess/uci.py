@@ -1,13 +1,7 @@
-import sys
-
 import search as Search
-from evaluation import evaluate
-from helpers import *
-from limits import *
 
 # External
 from sys import stdout
-from threading import Thread
 import chess
 
 from model.barriers.mvp.chess.mctsearch import mcts_best
@@ -16,8 +10,8 @@ from model.barriers.mvp.chess.mctsearch import mcts_best
 class UCI:
     def __init__(self) -> None:
         self.out = stdout
-        self.board = chess.Board()
-        self.search = Search.Search(self.board)
+        self.state = chess.Board()
+        self.search = Search.Search()
         self.thread: None
 
     def output(self, s) -> None:
@@ -26,19 +20,19 @@ class UCI:
 
     def stop(self) -> None:
         self.search.stop = True
-        if self.thread is not None:
-            try:
-                self.thread.join()
-            except:
-                pass
+        # if self.thread is not None:
+        #     try:
+        #         self.thread.join()
+        #     except:
+        #         pass
 
     def quit(self) -> None:
         self.search.stop = True
-        if self.thread is not None:
-            try:
-                self.thread.join()
-            except:
-                pass
+        # if self.thread is not None:
+        #     try:
+        #         self.thread.join()
+        #     except:
+        #         pass
 
     def uci(self) -> None:
         self.output("id name xasifaz")
@@ -55,11 +49,11 @@ class UCI:
         pass
 
     def eval(self) -> None:
-        _, score = mcts_best(self.board)
+        _, score = mcts_best(self.state, self.search)
         self.output(score)
 
-    def processCommand(self, input: str) -> None:
-        splitted = input.split(" ")
+    def process_command(self, inp: str) -> None:
+        splitted = inp.split(" ")
         if splitted[0] == "quit":
             self.quit()
         elif splitted[0] == "stop":
@@ -78,34 +72,28 @@ class UCI:
             self.search.reset()
             fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
             movelist = []
-
-            move_idx = input.find("moves")
+            move_idx = inp.find("moves")
             if move_idx >= 0:
-                movelist = input[move_idx:].split()[1:]
-
+                movelist = inp[move_idx:].split()[1:]
             if splitted[1] == "fen":
-                position_idx = input.find("fen") + len("fen ")
-
+                position_idx = inp.find("fen") + len("fen ")
                 if move_idx >= 0:
-                    fen = input[position_idx:move_idx]
+                    fen = inp[position_idx:move_idx]
                 else:
-                    fen = input[position_idx:]
-
-            self.board.set_fen(fen)
+                    fen = inp[position_idx:]
+            self.state.set_fen(fen)
             self.search.hashHistory.clear()
-
             for move in movelist:
-                self.board.push_uci(move)
-                self.search.hashHistory.append(self.search.getHash())
+                self.state.push_uci(move)
+                self.search.hashHistory.append(self.search.getHash(self.state))
         elif splitted[0] == "print":
-            print(self.board)
+            print(self.state)
         elif splitted[0] == "go":
             # limits = Limits(0, MAX_PLY, 0)
-            #
-            # l = ["depth", "nodes"]
-            # for limit in l:
-            #     if limit in splitted:
-            #         limits.limited[limit] = int(splitted[splitted.index(limit) + 1])
+            # limits.limited["depth"] = 4
+            # self.search.limit = limits
+            # self.thread = Thread(target=self.search.iterativeDeepening)
+            # self.thread.start()
             #
             # ourTimeStr = "wtime" if self.board.turn == chess.WHITE else "btime"
             # ourTimeIncStr = "winc" if self.board.turn == chess.WHITE else "binc"
@@ -119,11 +107,7 @@ class UCI:
             #     limits.limited["time"] += (
             #         int(splitted[splitted.index(ourTimeIncStr) + 1]) / 2
             #     )
-            # self.search.limit = limits
-            # self.thread = Thread(target=self.search.iterativeDeepening)
-            # self.thread.start()
-            bestmove, _ = mcts_best(self.board)
-            # stdout.write("info " + str(score) + "\n")
+            bestmove, _ = mcts_best(self.state, self.search)
             stdout.write("bestmove " + str(bestmove) + "\n")
             stdout.flush()
         elif splitted[0] == "eval":

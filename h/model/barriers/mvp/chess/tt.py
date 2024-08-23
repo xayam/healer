@@ -7,7 +7,7 @@ from enum import Enum
 Flag = Enum("Flag", ["NONEBOUND", "UPPERBOUND", "LOWERBOUND", "EXACTBOUND"])
 
 """
-This is an entry in our TT, it saves
+This is an entry in our tt, it saves
 information about the score, flag and most
 importantly the move.
 """
@@ -32,7 +32,7 @@ class TranspositionTable:
     def ttIndex(self, key: int) -> int:
         return key % self.tt_size
 
-    # store an entry in the TT
+    # store an entry in the tt
     def storeEntry(
         self, key: int, depth: int, flag: Flag, score: int, move: chess.Move, ply: int
     ) -> None:
