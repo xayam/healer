@@ -92,7 +92,7 @@ class UCI:
             # limits = Limits(0, MAX_PLY, 0)
             # limits.limited["depth"] = 4
             # self.search.limit = limits
-            # self.thread = Thread(target=self.search.iterativeDeepening)
+            # self.thread = Thread(target=self.search.iterative_deepening)
             # self.thread.start()
             #
             # ourTimeStr = "wtime" if self.board.turn == chess.WHITE else "btime"

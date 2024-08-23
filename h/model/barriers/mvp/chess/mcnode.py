@@ -43,7 +43,7 @@ class MCTSNode:
         limits = Limits(0, MAX_PLY, 0)
         limits.limited["depth"] = 4
         search.limit = limits
-        return search.iterativeDeepening(self.state)
+        return search.iterative_deepening(self.state)
         # else:
         #     return self.wins / self.visits + exploration_constant * \
         #         math.sqrt(math.log(self.parent.visits) / self.visits)

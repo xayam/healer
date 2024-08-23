@@ -14,41 +14,33 @@ from sys import stdout
 class Search:
     def __init__(self) -> None:
         # self.board = board
-
         # This is our transposition table, it stores positions
         # it is one of the most important parts of a chess engine.
         # It stores results of previously performed searches and it
         # allows to skip parts of the search tree and order moves.
         self.transposition_table = tt.TranspositionTable()
-
         self.pvLength = [0] * MAX_PLY
         # This is our principal variation table, it stores the best
         # moves for each depth. It is used to print the best line
         # after the search is completed.
         self.pvTable = [[chess.Move.null()] * MAX_PLY for _ in range(MAX_PLY)]
-
         # Total nodes searched
         self.nodes = 0
-
         # Current limits for the search
         self.limit = Limits(0, MAX_PLY, 0)
-
         # True when the search is stopped/aborted
         self.stop = False
-
         # Time checking is expensive and we dont want to do it every node
         self.checks = CHECK_RATE
-
         # Keeps track of the zobrist hashes encountered during the search
         # Used to efficiently detect repetitions
         self.hashHistory = []
-
         # History Table
         # Indexed by [color][from][to]
-        self.htable = [[[0 for x in range(64)]
-                        for y in range(64)] for z in range(2)]
+        self.htable = [[[0 for _ in range(64)]
+                        for _ in range(64)] for _ in range(2)]
 
-    def qsearch(self, state, alpha: int, beta: int, ply: int) -> int:
+    def q_search(self, state, alpha: int, beta: int, ply: int) -> int:
         """
         Quiescence Search, this is a special search that only searches
         captures and checks. It is needed to avoid the horizon effect.
@@ -56,63 +48,48 @@ class Search:
         """
         if self.stop or self.checkTime():
             return 0
-
-        # Dont search higher than MAX_PLY
+        # Don't search higher than MAX_PLY
         if ply >= MAX_PLY:
             return evaluate(state)
-
         # staticEval
         bestValue = evaluate(state)
-
         if bestValue >= beta:
             return bestValue
-
         if bestValue > alpha:
             alpha = bestValue
-
         # Sort the moves, the highest score should come first,
         # to reduce the size of the search tree
         moves = sorted(
             state.generate_legal_captures(),
-            key=lambda move: self.scoreQMove(state, move),
+            key=lambda m: self.scoreQMove(state, m),
             reverse=True,
         )
-
         # Loop over all legal captures
         for move in moves:
             self.nodes += 1
-
             captured = state.piece_type_at(move.to_square)
-
             # Delta Pruning
             if (
                 pqst.piece_values[captured] + 400 + bestValue < alpha
                 and not move.promotion
             ):
                 continue
-
             # Make move
             state.push(move)
-
-            score = -self.qsearch(state, -beta, -alpha, ply + 1)
-
+            score = -self.q_search(state, -beta, -alpha, ply + 1)
             # Unmake move
             state.pop()
-
             # We found a new best value
             if score > bestValue:
                 bestValue = score
-
                 if score > alpha:
                     alpha = score
-
                     if score >= beta:
                         break
-
         return bestValue
 
-    def absearch(self, state: chess.Board,
-                 alpha: int, beta: int, depth: int, ply: int) -> int:
+    def ab_search(self, state: chess.Board,
+                  alpha: int, beta: int, depth: int, ply: int) -> int:
         """
         Alpha Beta Search, this is the main search function.
         It searches the tree recursively and returns the best score.
@@ -121,114 +98,86 @@ class Search:
         """
         if self.checkTime():
             return 0
-
         # Dont search higher than MAX_PLY
         if ply >= MAX_PLY:
             return evaluate(state)
-
         self.pvLength[ply] = ply
         RootNode = ply == 0
         hashKey = self.getHash(state)
-
         if not RootNode:
-            if self.isRepetition(state, hashKey):
+            if self.is_repetition(state, hashKey):
                 # slight draw bias
                 return -5
-
             if state.halfmove_clock >= 100:
                 return 0
-
             # Mate distance pruning
             alpha = max(alpha, mated_in(ply))
             beta = min(beta, mate_in(ply + 1))
             if alpha >= beta:
                 return alpha
-
-        # Jump into qsearch
+        # Jump into q_search
         if depth <= 0:
-            return self.qsearch(state, alpha, beta, ply)
-
+            return self.q_search(state, alpha, beta, ply)
         # Transposition Table probing
         tte = self.transposition_table.probeEntry(hashKey)
         ttHit = hashKey == tte.key
         ttMove = tte.move if ttHit else chess.Move.null()
-
         # Adjust score
         ttScore = (
             self.transposition_table.scoreFromTT(tte.score, ply)
             if ttHit
             else VALUE_NONE
         )
-
         if not RootNode and tte.depth >= depth and ttHit:
             if tte.flag == tt.Flag.LOWERBOUND:
                 alpha = max(alpha, ttScore)
             elif tte.flag == tt.Flag.UPPERBOUND:
                 beta = min(beta, ttScore)
-
             if alpha >= beta:
                 return ttScore
-
         inCheck = state.is_check()
-
         # Null move pruning
         if depth >= 3 and not inCheck:
             state.push(chess.Move.null())
-
-            score = -self.absearch(state, -beta, -beta + 1, depth - 2, ply + 1)
-
+            score = -self.ab_search(state, -beta, -beta + 1, depth - 2, ply + 1)
             state.pop()
-
             if score >= beta:
                 if score >= VALUE_TB_WIN_IN_MAX_PLY:
                     score = beta
-
                 return score
-
         oldAlpha = alpha
         bestScore = -VALUE_INFINITE
         bestMove = chess.Move.null()
         madeMoves = 0
-
         # Sort the moves, the highest score should come first
         # The ttMove should be first one searched, incase we have a hit
         moves = sorted(
             state.legal_moves,
-            key=lambda move: self.scoreMove(state, move, ttMove),
+            key=lambda m: self.scoreMove(state, m, ttMove),
             reverse=True,
         )
-
         for move in moves:
             madeMoves += 1
             self.nodes += 1
-
             # Make move
             state.push(move)
             self.hashHistory.append(hashKey)
-
             # Search
-            score = -self.absearch(state, -beta, -alpha, depth - 1, ply + 1)
-
+            score = -self.ab_search(state, -beta, -alpha, depth - 1, ply + 1)
             # Unmake move
             state.pop()
             self.hashHistory.pop()
-
             if score > bestScore:
                 bestScore = score
                 bestMove = move
-
                 # update PV
                 self.pvTable[ply][ply] = move
-
                 for i in range(ply + 1, self.pvLength[ply + 1]):
                     self.pvTable[ply][i] = self.pvTable[ply + 1][i]
-
                 self.pvLength[ply] = self.pvLength[ply + 1]
-
                 if score > alpha:
                     # update alpha!
                     alpha = score
-
                     if score >= beta:
                         # update history
                         if not state.is_capture(move):
@@ -241,12 +190,10 @@ class Search:
                                 * abs(bonus)
                                 / 16384
                             )
-
                             self.htable[state.turn][move.from_square][
                                 move.to_square
                             ] += hhBonus
                         break
-
         # No moves were played so its checkmate or stalemate
         # Instead checking if the position is a checkmate
         # during evaluate we can do it here
@@ -256,10 +203,8 @@ class Search:
                 return mated_in(ply)
             else:
                 return 0
-
         # Calculate bound and save position in tt
         bound = tt.Flag.NONEBOUND
-
         if bestScore >= beta:
             bound = tt.Flag.LOWERBOUND
         else:
@@ -267,66 +212,55 @@ class Search:
                 bound = tt.Flag.EXACTBOUND
             else:
                 bound = tt.Flag.UPPERBOUND
-
         if not self.checkTime():
             # Store in tt
             self.transposition_table.storeEntry(
                 hashKey, depth, bound, bestScore, bestMove, ply
             )
-
         return bestScore
 
-    def iterativeDeepening(self, state) -> None:
+    def iterative_deepening(self, state) -> int:
         """
-        Iterative Deepening, this will call the absearch function
+        Iterative Deepening, this will call the ab_search function
         with increasing depth until the time limit is reached or
         the maximum depth is reached.
         """
         self.nodes = 0
-
         score = -VALUE_INFINITE
         bestmove = chess.Move.null()
-
         # Start measuring time
         self.t0 = time.time_ns()
-
         # Iterative Deepening Loop
         for d in range(1, self.limit.limited["depth"] + 1):
-            score = self.absearch(state,
-                                  -VALUE_INFINITE, VALUE_INFINITE, d, 0)
-
+            score = self.ab_search(state,
+                                   -VALUE_INFINITE, VALUE_INFINITE, d, 0)
             # Dont use completed depths result
             if self.stop or self.checkTime(True):
                 break
-
             # Save bestmove
             bestmove = self.pvTable[0][0]
-
             # print info
             now = time.time_ns()
             stdout.write(self.stats(d, score, now - self.t0) + "\n")
             stdout.flush()
-
         # last attempt to get a bestmove
         if bestmove == chess.Move.null():
             bestmove = self.pvTable[0][0]
-
+        return score
         # print bestmove, as per UCI Protocol
         # stdout.write("bestmove " + str(bestmove) + "\n")
         # stdout.flush()
 
     # Detect a repetition
-    def isRepetition(self, state, key: int, draw: int = 1) -> bool:
+    def is_repetition(self, state, key: int, draw: int = 1) -> bool:
         count = 0
         size = len(self.hashHistory)
-
         for i in range(size - 1, -1, -2):
             if i >= size - state.halfmove_clock:
                 if self.hashHistory[i] == key:
                     count += 1
                 if count == draw:
                     return True
-
         return False
 
     # Most Valuable Victim - Least Valuable Aggressor
@@ -340,18 +274,16 @@ class Search:
             [0, 505, 504, 503, 502, 501, 500],
             [0, 605, 604, 603, 602, 601, 600],
         ]
-
         from_square = move.from_square
         to_square = move.to_square
         attacker = state.piece_type_at(from_square)
         victim = state.piece_type_at(to_square)
-
         # En passant
         if victim is None:
             victim = 1
         return mvvlva[victim][attacker]
 
-    # assign a score to moves in qsearch
+    # assign a score to moves in q_search
     def scoreQMove(self, state, move: chess.Move) -> int:
         return self.mvvlva(state, move)
 
@@ -376,29 +308,22 @@ class Search:
             and self.nodes >= self.limit.limited["nodes"]
         ):
             return True
-
         if self.checks > 0 and not iter:
             self.checks -= 1
             return False
-
         self.checks = CHECK_RATE
-
         if self.limit.limited["time"] == 0:
             return False
-
         timeNow = time.time_ns()
         if (timeNow - self.t0) / 1_000_000 > self.limit.limited["time"]:
             return True
-
         return False
 
     # Build PV
-    def getPV(self) -> str:
+    def get_pv(self) -> str:
         pv = ""
-
         for i in range(0, self.pvLength[0]):
             pv += " " + str(self.pvTable[0][i])
-
         return pv
 
     # Convert mate scores
@@ -430,7 +355,7 @@ class Search:
             + " time "
             + str(round(time / 1_000_000))
             + " pv"
-            + self.getPV()
+            + self.get_pv()
         )
         return info
 
@@ -451,4 +376,4 @@ if __name__ == "__main__":
     board = chess.Board()
     search = Search()
     search.limit.limited["depth"] = 4
-    search.iterativeDeepening(board)
+    print(search.iterative_deepening(board))
