@@ -70,7 +70,7 @@ class UCI:
         elif splitted[0] == "setoption":
             pass
         elif splitted[0] == "position":
-            self.search.reset()
+            # self.search.reset()
             fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
             movelist = []
             move_idx = inp.find("moves")
@@ -83,10 +83,10 @@ class UCI:
                 else:
                     fen = inp[position_idx:]
             self.state.set_fen(fen)
-            self.search.hashHistory.clear()
+            # self.search.hashHistory.clear()
             for move in movelist:
                 self.state.push_uci(move)
-                self.search.hashHistory.append(self.search.get_hash(self.state))
+                # self.search.hashHistory.append(self.search.get_hash(self.state))
         elif splitted[0] == "print":
             print(self.state)
         elif splitted[0] == "go":
