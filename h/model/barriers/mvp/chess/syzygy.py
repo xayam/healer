@@ -25,8 +25,8 @@ def main():
     folder = 'E:/Chess'
     syzygy = folder + '/syzygy/'
     domain = 'https://tablebase.lichess.ovh/tables/standard/'
-    folders = ['6-wdl', '6-dtz', '3-4-5-dtz', '3-4-5-wdl']
-    ext = ['wdl', 'dtz']
+    folders = ['6-get_wdl', '6-dtz', '3-4-5-dtz', '3-4-5-get_wdl']
+    ext = ['get_wdl', 'dtz']
     for f in folders:
         for ex in ext:
             index = folder + '/' + f + '.html'
@@ -35,7 +35,7 @@ def main():
                 print(index2)
             ff = open(index, "r")
             html = ff.read()
-            if ex == 'wdl':
+            if ex == 'get_wdl':
                 rtb = re.findall(r'>(.*?\.rtbw)<', html)
             else:
                 rtb = re.findall(r'>(.*?\.rtbz)<', html)
@@ -45,8 +45,8 @@ def main():
                 print("\n" + f + '/' + wdl)
                 if exists(syzygy + f + '/' + wdl):
                     print('Exists!')
-                    # hs = open(syzygy + f + '/' + 'checksum.md5', "a")
-                    # hs.write(md5(syzygy + f + '/' + wdl) + '  ' + wdl + "\n")
+                    # hs = open(syzygy + fen_position + '/' + 'checksum.md5', "a")
+                    # hs.write(md5(syzygy + fen_position + '/' + get_wdl) + '  ' + get_wdl + "\n")
                     # hs.close()
                     continue
                 _ = wget.download(domain + f + '/' + wdl,
