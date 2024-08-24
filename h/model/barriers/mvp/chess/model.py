@@ -42,7 +42,7 @@ class Model:
         results = []
         while True:
             self.dataset = self.get_data(
-                fen_generator=self.fen_db,
+                fen_generator=self.get_fen,
                 get_score=self.get_score,
                 limit=5000
             )
@@ -70,24 +70,24 @@ class Model:
 
     def search_params(self):
         self.dataset = self.get_data(
-            fen_generator=self.fen_db,
+            fen_generator=self.get_fen,
             get_score=self.get_score,
-            limit=500
+            limit=400
         )
         results = []
-        maxi = -10 ** 10
-        maximum_layer = -10 ** 10
-        maximum_grid = -10 ** 10
-        maximum_k = -10 ** 10
+        maxi = 10 ** 10
+        maximum_layer = 10 ** 10
+        maximum_grid = 10 ** 10
+        maximum_k = 10 ** 10
         while True:
-            hidden_layer = random.choice(list(range(2, 1000)))
-            grid = random.choice(list(range(5, 30)))
+            hidden_layer = random.choice(list(range(2, 100)))
+            grid = random.choice(list(range(17, 18)))
             k = random.choice(list(range(3, 4)))
-            self.model = KAN(width=[self.len_input, hidden_layer, 1],
-                             grid=grid, k=k,
-                             auto_save=False,
-                             seed=42
-                             )
+            self.model = KAN(
+                width=[
+                    self.len_input, *[i for i in range(8, 0, -1)], 1
+                ],
+                grid=grid, k=k, auto_save=False, seed=0)
             result = self.model.fit(self.dataset,
                                     lamb=0.00,
                                     # lamb_entropy=10,
@@ -97,8 +97,8 @@ class Model:
             results.append([hidden_layer, grid, k,
                             result['test_loss'][0]
             ])
-            if result['test_acc'][0] > maxi:
-                maxi = result['test_acc'][0]
+            if result['test_loss'][0] < maxi:
+                maxi = result['test_loss'][0]
                 maximum_layer = hidden_layer
                 maximum_grid = grid
                 maximum_k = k
@@ -218,24 +218,23 @@ class Model:
         state.set_fen(fen)
         with chess.engine.SimpleEngine.popen_uci(str_stockfish) as sf:
             result = sf.analyse(state, chess.engine.Limit(depth=depth))
-            score = result['score'].white().score()
+            if state.turn == chess.WHITE:
+                score = result['score'].white().score()
+            else:
+                score = result['score'].black().score()
             return score
 
 
-    def fen_db(self, get_score, limit):
+    def get_fen(self, get_score, limit):
         with open("dataset.epdeval", mode="r") as f:
             dataevals = f.readlines()
-        count = 0
         fens = []
         for _ in range(limit):
-            count += 1
             dataeval = str(random.choice(dataevals)).strip()
             spl = dataeval.split(" ")
             fen = " ".join(spl[:-1])
             fens.append(fen)
-            if len(fens) == 2:
-                yield fens
-                fens = []
+        yield fens
 
 
     def fen_generator(self, get_score, limit):
@@ -316,7 +315,7 @@ class Model:
             get_score=self.get_wdl,
             limit=100
         )
-        fen = list(self.fen_db(get_score=self.get_score, limit=2))[0][0]
+        fen = list(self.get_fen(get_score=self.get_score, limit=2))[0][0]
         board = chess.Board()
         board.set_fen(fen)
         inp = self.get_train(state=board)
