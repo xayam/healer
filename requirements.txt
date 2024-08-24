@@ -6,6 +6,7 @@ sympy==1.11.1
 torch==2.2.2
 tqdm==4.66.2
 colorama
+wget
 chess
 Pyinstaller
 pyyaml
