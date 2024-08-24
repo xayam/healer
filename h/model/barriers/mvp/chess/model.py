@@ -1,4 +1,6 @@
 import pickle
+import sys
+
 from kan import *
 import chess
 import chess.syzygy
@@ -9,7 +11,7 @@ from helpers import poplsb, lsb
 
 class Model:
 
-    COUNT_FEN_LIMIT = 100
+    COUNT_FEN_LIMIT = 10000
 
     def __init__(self):
         self.model = None
@@ -17,57 +19,40 @@ class Model:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.dtype = torch.get_default_dtype()
         print(self.device, self.dtype)
-        # self.dataset = self.get_data(
-        #     fen_generator=self.fen_generator, get_score=self.get_wdl
-        # )
-        # self.train()
-        self.test_model()
+        self.train()
+        # self.test_model()
+        # self.predict()
 
     def train(self):
         results = []
-        mini = 10 ** 10
-        minimum_layers1 = 10 ** 10
-        # minimum_layers2 = 10 ** 10
-        minimum_grid = 10 ** 10
-        minimum_k = 10 ** 10
+        self.model = KAN(width=[130, 17, 1],
+                         grid=31, k=3,
+                         seed=0, ckpt_path='./wdl_model')
         while True:
-            hidden_layers1 = random.choice(list(range(17, 18)))
-            # hidden_layers2 = random.choice(list(range(5, 31)))
-            grid = random.choice(list(range(31, 32)))
-            k = random.choice(list(range(3, 4)))
-            self.model = KAN(width=[130, hidden_layers1, 1],
-                             grid=grid, k=k,
-                             seed=0, ckpt_path='./wdl_model')
+            self.dataset = self.get_data(
+                fen_generator=self.fen_generator, get_score=self.get_wdl
+            )
             result = self.model.fit(self.dataset,
-                                    steps=2)
+                                    steps=20)
             results.append([
-                hidden_layers1, grid, k,
                 result['test_loss'][0] + result['test_loss'][1]
             ])
             results = sorted(results, key=lambda xx: xx[-1], reverse=True)
-            if results[-1][-1] < mini:
-                mini = results[-1][-1]
-                minimum_layers1 = hidden_layers1
-                minimum_grid = grid
-                minimum_k = k
-            utils_progress(f"hidden_layers={minimum_layers1} " +
-                           f"| grid={minimum_grid} | k={minimum_k} | {mini}")
-            break
-        print(results)
-        print("Saving dataset...")
-        with open(f"wdl_dataset_0.pkl", mode="wb") as p:
-            pickle.dump(self.dataset, p)
-        lib = ['x', 'x^2', 'x^3', 'x^4', 'exp', 'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs']
-        self.model.auto_symbolic(lib=lib)
-        formula = self.model.symbolic_formula()[0][0]
-        # print(str(ex_round(formula, 4)))
-        print(formula)
-        print("Saving formula...")
-        with open(f"wdl_formula_0.txt", encoding="UTF-8", mode="w") as p:
-            p.write(str(formula))
-        print("Saving state...")
-        with open(f"wdl_state_0.pkl", mode="wb") as p:
-            pickle.dump(self.model.state_dict(keep_vars=True), p)
+            utils_progress(f"results[-1]={results[-1][-1]}")
+            lib = ['x', 'x^2', 'x^3', 'x^4', 'exp', 'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs']
+            self.model.auto_symbolic(lib=lib)
+            formula = self.model.symbolic_formula()[0][0]
+            # print(str(ex_round(formula, 4)))
+            print(formula)
+            print("Saving dataset...")
+            with open(f"wdl_dataset_0.pkl", mode="wb") as p:
+                pickle.dump(self.dataset, p)
+            print("Saving formula...")
+            with open(f"wdl_formula_0.txt", encoding="UTF-8", mode="w") as p:
+                p.write(str(formula))
+            print("Saving state...")
+            with open(f"wdl_state_0.pkl", mode="wb") as p:
+                pickle.dump(self.model.state_dict(keep_vars=True), p)
 
     @staticmethod
     def get_train(state):
@@ -224,7 +209,28 @@ class Model:
             p.write(formula2)
 
     def predict(self):
-        pass
+        print("Loading formula...")
+        with open(f"wdl_formula_0.txt", encoding="UTF-8", mode="r") as p:
+            formula1 = p.read().strip()
+        # with open(f"wdl_formula_1.txt", encoding="UTF-8", mode="r") as p:
+        #     formula2 = p.read().strip()
+        self.dataset = self.get_data(
+            fen_generator=self.fen_generator,
+            get_score=self.get_wdl
+        )
+        variable_values = {
+            f"x_{i}": self.dataset['train_input'][-1][i - 1].numpy().item(0)
+            for i in range(1, 131)
+        }
+        # print(variable_values)
+        # sys.exit()
+        for var, val in variable_values.items():
+            formula1 = formula1.replace(var, str(val))
+            # formula2 = formula2.replace(var, str(val))
+        result1 = eval(formula1)
+        # result2 = eval(formula2)
+        print(result1)
+        print(self.get_wdl("8/8/5R1k/8/8/5K2/8/8 b - - 0 1"))
 
 
 
