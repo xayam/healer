@@ -1,5 +1,5 @@
 import pickle
-import sys
+import datetime
 
 from kan import *
 import chess
@@ -11,51 +11,70 @@ from helpers import poplsb, lsb
 
 class Model:
 
-    COUNT_FEN_LIMIT = 10000
+    COUNT_FEN_LIMIT = 5000
 
     def __init__(self):
         self.model = None
         self.dataset = None
+        self.last_fen = None
+        self.len_input = 11
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.dtype = torch.get_default_dtype()
         print(self.device, self.dtype)
+
+        self.model = KAN(width=[self.len_input, 17, 1],
+                         grid=31, k=3,
+                         auto_save=True,
+                         seed=0,
+                         ckpt_path='./wdl_model')
+        try:
+            print("Loading ./ckpts...")
+            self.model.loadckpt("./ckpts")
+        except FileNotFoundError:
+            pass
+
         self.train()
         # self.test_model()
         # self.predict()
 
     def train(self):
         results = []
-        self.model = KAN(width=[130, 17, 1],
-                         grid=31, k=3,
-                         seed=0, ckpt_path='./wdl_model')
         while True:
             self.dataset = self.get_data(
-                fen_generator=self.fen_generator, get_score=self.get_wdl
+                fen_generator=self.fen_generator,
+                get_score=self.get_wdl,
+                limit=1000
             )
             result = self.model.fit(self.dataset,
-                                    steps=20)
+                                    lamb=0.01, lamb_entropy=10,
+                                    metrics=(self.train_acc, self.test_acc),
+                                    steps=50)
+            print(result['train_acc'][-1], result['test_acc'][-1])
             results.append([
                 result['test_loss'][0] + result['test_loss'][1]
             ])
             results = sorted(results, key=lambda xx: xx[-1], reverse=True)
-            utils_progress(f"results[-1]={results[-1][-1]}")
+            utils_progress(f"results[-1][-1]={results[-1][-1]}")
+            print("Saving ckpt...")
+            self.model.saveckpt("./ckpts/wdl_model_" +
+                                str(datetime.datetime.now()).\
+                                replace(":", "-").replace(".", "-"). \
+                                replace(" ", "-").replace("-", "_"))
             lib = ['x', 'x^2', 'x^3', 'x^4', 'exp', 'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs']
             self.model.auto_symbolic(lib=lib)
             formula = self.model.symbolic_formula()[0][0]
-            # print(str(ex_round(formula, 4)))
-            print(formula)
-            print("Saving dataset...")
-            with open(f"wdl_dataset_0.pkl", mode="wb") as p:
-                pickle.dump(self.dataset, p)
-            print("Saving formula...")
             with open(f"wdl_formula_0.txt", encoding="UTF-8", mode="w") as p:
-                p.write(str(formula))
-            print("Saving state...")
-            with open(f"wdl_state_0.pkl", mode="wb") as p:
-                pickle.dump(self.model.state_dict(keep_vars=True), p)
+                p.write(str(formula).strip())
 
-    @staticmethod
-    def get_train(state):
+    def train_acc(self):
+        return torch.mean((torch.round(self.model(self.dataset['train_input'])[:, 0]) ==
+                           self.dataset['train_label'][:, 0]).type(self.dtype))
+
+    def test_acc(self):
+        return torch.mean((torch.round(self.model(self.dataset['test_input'])[:, 0]) ==
+                           self.dataset['test_label'][:, 0]).type(self.dtype))
+
+    def get_train(self, state):
         train_input = [[0., 0.] for _ in range(64)]
         for color in [False, True]:
             occupied = state.occupied_co[color]
@@ -71,9 +90,9 @@ class Model:
         else:
             train_input = [state.ep_square] + train_input
         train_input = [int(state.turn)] + train_input
-        return train_input
+        return train_input[:self.len_input]
 
-    def get_data(self, fen_generator, get_score):
+    def get_data(self, fen_generator, get_score, limit):
         count = 0
         dataset = {}
         train_inputs = []
@@ -81,12 +100,13 @@ class Model:
         test_inputs = []
         test_labels = []
         r = random.choice([0, 1])
-        for endgame in fen_generator(get_score):
+        for endgame in fen_generator(get_score, limit):
             for fen in endgame:
                 score = get_score(fen)
                 if score is None:
                     continue
                 count += 1
+                self.last_fen = fen
                 utils_progress(f"{str(count).rjust(9, ' ')} | " +
                                f"{str(get_score(fen)).rjust(2, ' ')} | {fen}")
                 board = chess.Board()
@@ -138,7 +158,7 @@ class Model:
             break
         return state
 
-    def fen_generator(self, get_score):
+    def fen_generator(self, get_score, limit):
         board = chess.Board()
         count = 0
         while True:
@@ -182,7 +202,7 @@ class Model:
                         count += 1
                         endgames.append(fen_positions)
             yield endgames
-            if count > self.COUNT_FEN_LIMIT:
+            if count > limit:
                 break
 
     def test_model(self):
@@ -198,7 +218,9 @@ class Model:
         with open(f"wdl_state_0.pkl", mode="rb") as p:
             self.model.__setstate__(pickle.load(p))
         self.dataset = self.get_data(
-            fen_generator=self.fen_generator, get_score=self.get_wdl
+            fen_generator=self.fen_generator,
+            get_score=self.get_wdl,
+            limit=100
         )
         self.model.fit(self.dataset, steps=2)
         lib = ['x', 'x^2', 'x^3', 'x^4', 'exp', 'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs']
@@ -209,29 +231,33 @@ class Model:
             p.write(formula2)
 
     def predict(self):
-        print("Loading formula...")
-        with open(f"wdl_formula_0.txt", encoding="UTF-8", mode="r") as p:
-            formula1 = p.read().strip()
-        # with open(f"wdl_formula_1.txt", encoding="UTF-8", mode="r") as p:
-        #     formula2 = p.read().strip()
         self.dataset = self.get_data(
             fen_generator=self.fen_generator,
-            get_score=self.get_wdl
+            get_score=self.get_wdl,
+            limit=50
         )
+        fen = '8/K7/8/8/2k5/8/8/3r4 b - - 0 1'
+        board = chess.Board()
+        board.set_fen(fen)
+        inp = self.get_train(state=board)
+        print(inp)
         variable_values = {
-            f"x_{i}": self.dataset['train_input'][-1][i - 1].numpy().item(0)
-            for i in range(1, 131)
+            f"x_{i}": int(inp[i - 1])
+            for i in range(self.len_input, 0, -1)
         }
         # print(variable_values)
         # sys.exit()
+        result = self.model.fit(self.dataset, steps=2)
+        print(result['test_loss'][0] + result['test_loss'][1])
+        lib = ['x', 'x^2', 'x^3', 'x^4', 'exp', 'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs']
+        self.model.auto_symbolic(lib=lib)
+        formula = self.model.symbolic_formula()[0][0]
+        print(formula)
         for var, val in variable_values.items():
-            formula1 = formula1.replace(var, str(val))
-            # formula2 = formula2.replace(var, str(val))
-        result1 = eval(formula1)
-        # result2 = eval(formula2)
-        print(result1)
-        print(self.get_wdl("8/8/5R1k/8/8/5K2/8/8 b - - 0 1"))
-
+            formula = str(formula).replace(var, str(val))
+        result = eval(formula)
+        print(result)
+        print(fen)
 
 
 if __name__ == "__main__":
