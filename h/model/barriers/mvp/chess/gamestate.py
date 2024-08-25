@@ -1,26 +1,38 @@
+E = 0
+P = 1
+N = 2
+B = 3
+R = 4
+Q = 5
+K = 6
 
-TYPE_PAWN = 1
-TYPE_KNIGHT = 2
-TYPE_BISHOP = 3
-TYPE_ROOK = 4
-TYPE_QUEEN = 5
-TYPE_KING = 6
 
-
-WHITE_FIELD = [1, 1]
-BLACK_FIELD = [0, 0]
-WHITE_PAWN = [TYPE_PAWN, 0]
-BLACK_PAWN = [0, TYPE_PAWN]
-WHITE_KNIGHT = [TYPE_KNIGHT, 0]
-BLACK_KNIGHT = [0, TYPE_KNIGHT]
-WHITE_BISHOP = [TYPE_BISHOP, 0]
-BLACK_BISHOP = [0, TYPE_BISHOP]
-WHITE_ROOK = [TYPE_ROOK, 0]
-BLACK_ROOK = [0, TYPE_ROOK]
-WHITE_QUEEN = [TYPE_QUEEN, 0]
-BLACK_QUEEN = [0, TYPE_QUEEN]
-WHITE_KING = [TYPE_KING, 0]
-BLACK_KING = [0, TYPE_KING]
+FIELD = [[E, E],
+         [E, E]]
+WHITE_PAWN = [[P, 0],
+              [0, P]]
+BLACK_PAWN = [[0, P],
+              [P, 0]]
+WHITE_KNIGHT = [[N, 0],
+                [0, N]]
+BLACK_KNIGHT = [[0, N],
+                [N, 0]]
+WHITE_BISHOP = [[B, 0],
+                [0, B]]
+BLACK_BISHOP = [[0, B],
+                [B, 0]]
+WHITE_ROOK = [[R, 0],
+              [0, R]]
+BLACK_ROOK = [[0, R],
+              [R, 0]]
+WHITE_QUEEN = [[Q, 0],
+               [0, Q]]
+BLACK_QUEEN = [[0, Q],
+               [Q, 0]]
+WHITE_KING = [[K, 0],
+              [0, K]]
+BLACK_KING = [[0, K],
+              [K, 0]]
 
 BLACK = False
 WHITE = True
