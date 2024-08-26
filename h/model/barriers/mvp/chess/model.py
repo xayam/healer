@@ -13,11 +13,12 @@ from h.model.utils import utils_progress
 class Model:
 
     def __init__(self):
+        self.commands = None
         self.random = None
         self.model = None
         self.dataset = None
         self.last_fen = None
-        self.state_model = None
+        self.file_model = None
         self.file_formula = None
         self.pre_model_json = None
         self.model_json = None
@@ -35,8 +36,19 @@ class Model:
         self.init_model()
 
     def init_model(self):
+        self.commands = {
+            1: {"call": self.search_params, "desc": "Search params"},
+            2: {"call": self.finetune_model, "desc": "Fine-Tune model"},
+            3: {"call": self.test_model, "desc": "Test model"},
+            4: {"call": self.make_predict, "desc": "Make predict"},
+        }
         self.random = random.SystemRandom(0)
-        self.state_model = "model.pth"
+        self.model_option = {
+            "hidden_layer": 91,
+            "grid": 40,
+            "k": 3,
+        }
+        self.file_model = "model.pth"
         self.file_formula = "model_formula_0.txt"
         self.pre_model_json = "pre_model.json"
         self.model_json = "model.json"
@@ -60,26 +72,20 @@ class Model:
         self.formula = self.load_model()
 
     def start(self):
-        commands = {
-            1: {"call": self.search_params, "desc": "Search params"},
-            2: {"call": self.finetune_model, "desc": "Fine-Tune model"},
-            3: {"call": self.test_model, "desc": "Test model"},
-            4: {"call": self.make_predict, "desc": "Make predict"},
-        }
         print("Available commands:")
-        for key, value in commands.items():
+        for key, value in self.commands.items():
             print(f"   {key}. {value['desc']}")
         try:
             command = int(input("Choice command [default 1]: "))
         except ValueError:
             command = 1
-        if command not in commands.keys():
+        if command not in self.commands.keys():
             command = 1
 
-        commands[command]["call"]()
+        self.commands[command]["call"]()
 
     def save_model(self):
-        torch.save(self.model.state_dict(), self.state_model)
+        torch.save(self.model.state_dict(), self.file_model)
         self.model.auto_symbolic(lib=self.lib)
         formula = self.model.symbolic_formula()[0][0]
         with open(self.file_formula, encoding="UTF-8", mode="w") as p:
@@ -87,11 +93,6 @@ class Model:
 
     def load_model(self):
         print("Loading model...")
-        self.model_option = {
-            "hidden_layer": 91,
-            "grid": 40,
-            "k": 3,
-        }
         if os.path.exists(self.model_json):
             with open(self.model_json, "r") as f:
                 self.model_option = json.load(f)
@@ -102,8 +103,8 @@ class Model:
             width=[self.len_input, self.model_option["hidden_layer"], 1],
             grid=self.model_option["grid"],
             k=self.model_option["k"], auto_save=False, seed=0)
-        if os.path.exists(self.state_model):
-            self.model.load_state_dict(torch.load(self.state_model))
+        if os.path.exists(self.file_model):
+            self.model.load_state_dict(torch.load(self.file_model))
         if not os.path.exists(self.file_formula):
             return None
         else:
