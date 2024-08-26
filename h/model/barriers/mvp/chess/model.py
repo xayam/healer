@@ -74,7 +74,7 @@ class Model:
         self.model_option = {
             "hidden_layer": 91,
             "grid": 40,
-            "k": 3
+            "k": 3,
         }
         if os.path.exists(self.model_json):
             with open(self.model_json, "r") as f:
