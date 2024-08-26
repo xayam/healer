@@ -37,7 +37,7 @@ class Model:
 
     def model_init(self):
         self.commands = {
-            1: {"call": self.model_params, "desc": "Search gyper-params"},
+            1: {"call": self.model_params, "desc": "Search hyperparameters"},
             2: {"call": self.model_finetune, "desc": "Fine-Tune model"},
             3: {"call": self.model_test, "desc": "Test model"},
             4: {"call": self.make_predict, "desc": "Make predict"},
@@ -123,13 +123,13 @@ class Model:
                 get_score=self.get_score,
                 count_limit=self.count_limit
             )
-            result = self.model.fit(self.dataset,
-                                    loss_fn=self.loss_function,
-                                    metrics=(
-                                        self.train_accuracy,
-                                        self.test_accuracy
-                                    ),
-                                    steps=20)
+            result = self.model.fit(
+                self.dataset, loss_fn=self.loss_function, steps=5,
+                metrics=(
+                    self.train_accuracy,
+                    self.test_accuracy
+                )
+            )
             print(result['train_accuracy'][-1], result['test_accuracy'][-1])
             utils_progress(f"result['test_loss'][0]={result['test_loss'][0]}")
             self.model_save()
@@ -156,13 +156,13 @@ class Model:
             self.model = KAN(
                 width=[self.len_input, hidden_layer1, 1],
                 grid=grid1, k=k1, auto_save=False, seed=0)
-            result = self.model.fit(self.dataset,
-                                    loss_fn=self.loss_function,
-                                    metrics=(
-                                        self.train_accuracy,
-                                        self.test_accuracy
-                                    ),
-                                    steps=2)
+            result = self.model.fit(
+                self.dataset, loss_fn=self.loss_function, steps=2,
+                metrics=(
+                    self.train_accuracy,
+                    self.test_accuracy
+                )
+            )
             if result['test_accuracy'][-1] < maxi:
                 maxi = result['test_accuracy'][-1]
                 maximum_layer = hidden_layer1
