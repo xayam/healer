@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE instance-profile
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
+
+<instance-profile id="d"
+                 name="DocHealer" start-page="README.md">
+
+    <toc-element topic="README.md"/>
+    <toc-element toc-title="h">
+        <toc-element toc-title="model">
+            <toc-element topic="ulis.md"/>
+        </toc-element>
+    </toc-element>
+</instance-profile>
