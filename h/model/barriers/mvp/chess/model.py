@@ -52,9 +52,10 @@ class Model:
         self.file_formula = "model_formula_0.txt"
         self.pre_model_json = "pre_model.json"
         self.model_json = "model.json"
-        self.lib_formula = ['x', 'x^2', 'x^3', 'x^4', 'exp',
-                    'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs'
-                            ]
+        self.lib_formula = [
+            'x', 'x^2', 'x^3', 'x^4', 'exp',
+            'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs',
+        ]
         self.engine_stockfish = \
             'D:/Work2/PyCharm/SmartEval2/github/src/poler/poler/bin' + \
             '/stockfish-windows-x86-64-avx2.exe'
