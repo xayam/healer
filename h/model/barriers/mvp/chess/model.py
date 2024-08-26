@@ -144,7 +144,7 @@ class Model:
             print()
             print(result['train_acc'][-1], result['test_acc'][-1])
             print(f"hidden_layer={maximum_layer}, grid={maximum_grid}, k={maximum_k}, " +
-                  f"maxi_test_acc{maxi}")
+                  f"maxi_test_acc={maxi}")
             print(f"hidden_layer={hidden_layer1}, grid={grid1}, " +
                   f"k={k1}, test_loss={result['test_loss'][0]}")
             hidden_layer1 = rnd.choice(list(range(5, 101)))
