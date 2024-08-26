@@ -80,7 +80,7 @@ class Model:
         for key, value in self.commands.items():
             print(f"   {key}. {value['desc']}")
         try:
-            command = int(input("Choice command [default 1]: "))
+            command = int(input("Input command [default 1]: "))
         except ValueError:
             command = 1
         if command not in self.commands.keys():
