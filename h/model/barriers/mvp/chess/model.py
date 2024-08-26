@@ -1,11 +1,11 @@
 import json
 import os.path
 
-from kan import *
-
 import chess
 import chess.engine
 import chess.syzygy
+
+from kan import *
 
 from h.model.utils import utils_progress
 
