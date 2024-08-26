@@ -33,7 +33,7 @@ class Model:
         self.state_model = "model.pth"
         self.file_formula = "model_formula_0.txt"
         self.model_json = "model.json"
-        self.lib = ['x^2', 'x^3', 'x^4', 'exp',
+        self.lib = ['x', 'x^2', 'x^3', 'x^4', 'exp',
                     'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs'
                     ]
         self.len_input = 64 * 12 + 4
@@ -44,25 +44,22 @@ class Model:
         self.formula = self.load_model()
 
     def start(self):
+        commands = {
+            1: {"call": self.search_params, "desc": "Search params"},
+            2: {"call": self.finetune_model, "desc": "Fine-Tune model"},
+            3: {"call": self.test_model, "desc": "Test model"},
+            4: {"call": self.make_predict, "desc": "Make predict"},
+        }
         print("Available commands:")
-        print("   1. Search params")
-        print("   2. Fine-Tune model")
-        print("   3. Test model")
-        print("   4. Make predict")
+        for key, value in commands.items():
+            print(f"   {key}. {value['desc']}")
         try:
             command = int(input("Choice command [default 1]: "))
         except ValueError:
             command = 1
-        if command not in [1, 2, 3, 4]:
+        if command not in commands.keys():
             command = 1
-        if command == 1:
-            self.search_params()
-        elif command == 2:
-            self.finetune_model()
-        elif command == 3:
-            self.test_model()
-        else:
-            self.make_predict()
+        commands[command]["call"]()
 
     def save_model(self):
         # torch.save(self.model.state_dict(), self.state_model)
