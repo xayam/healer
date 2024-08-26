@@ -19,6 +19,7 @@ class Model:
         self.last_fen = None
         self.state_model = None
         self.file_formula = None
+        self.pre_model_json = None
         self.model_json = None
         self.model_option = None
         self.lib = None
@@ -37,6 +38,7 @@ class Model:
         self.random = random.SystemRandom(0)
         self.state_model = "model.pth"
         self.file_formula = "model_formula_0.txt"
+        self.pre_model_json = "pre_model.json"
         self.model_json = "model.json"
         self.lib = ['x', 'x^2', 'x^3', 'x^4', 'exp',
                     'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs'
@@ -77,11 +79,11 @@ class Model:
         commands[command]["call"]()
 
     def save_model(self):
+        torch.save(self.model.state_dict(), self.state_model)
         self.model.auto_symbolic(lib=self.lib)
         formula = self.model.symbolic_formula()[0][0]
         with open(self.file_formula, encoding="UTF-8", mode="w") as p:
             p.write(str(formula).strip())
-        torch.save(self.model.state_dict(), self.state_model)
 
     def load_model(self):
         print("Loading model...")
@@ -93,6 +95,9 @@ class Model:
         if os.path.exists(self.model_json):
             with open(self.model_json, "r") as f:
                 self.model_option = json.load(f)
+        else:
+            with open(self.model_json, "w") as f:
+                json.dump(self.model_option, f)
         self.model = KAN(
             width=[self.len_input, self.model_option["hidden_layer"], 1],
             grid=self.model_option["grid"],
@@ -149,7 +154,7 @@ class Model:
                 maximum_layer = hidden_layer1
                 maximum_grid = grid1
                 maximum_k = k1
-                with open(self.model_json, "w") as f:
+                with open(self.pre_model_json, "w") as f:
                     data = {"hidden_layer": maximum_layer,
                             "grid": maximum_grid,
                             "k": maximum_k}
