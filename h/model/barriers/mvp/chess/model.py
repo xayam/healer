@@ -1,16 +1,13 @@
 import os.path
 import pickle
 import datetime
-import random
 
-import torch
 from kan import *
 import chess.engine
 import chess
 import chess.syzygy
 
 from h.model.utils import utils_progress
-from helpers import poplsb, lsb
 
 
 class Model:
@@ -30,11 +27,7 @@ class Model:
         self.dtype = torch.get_default_dtype()
         print(self.device, self.dtype)
 
-        self.model = KAN(
-            width=[self.len_input, 91, 1],
-            grid=40, k=3, auto_save=False, seed=0)
-        if os.path.exists(self.state_model):
-            self.model.load_state_dict(torch.load(self.state_model))
+        self.load()
 
 
     def start(self):
@@ -42,35 +35,45 @@ class Model:
         # self.train()
         # self.test_model()
         # self.predict()
+
+    def save(self):
+        self.model.auto_symbolic(lib=self.lib)
+        formula = self.model.symbolic_formula()[0][0]
+        with open(self.file_formula, encoding="UTF-8", mode="w") as p:
+            p.write(str(formula).strip())
+        torch.save(self.model.state_dict(), self.state_model)
+
+    def load(self):
+        self.model = KAN(
+            width=[self.len_input, 91, 1],
+            grid=40, k=3, auto_save=False, seed=0)
+        if os.path.exists(self.state_model):
+            self.model.load_state_dict(torch.load(self.state_model))
+        if not os.path.exists(self.file_formula):
+            raise f"Path not exists: '{self.file_formula}'"
+        else:
+            with open(self.file_formula, encoding="UTF-8", mode="r") as p:
+                return str(p.read()).strip()
+
     def train(self):
         results = []
         while True:
             self.dataset = self.get_data(
                 fen_generator=self.get_fen,
                 get_score=self.get_score,
-                limit=5000
+                limit=48//4
             )
             result = self.model.fit(self.dataset,
-                                    lamb=0.01, lamb_entropy=10,
-                                    # metrics=(self.train_acc, self.test_acc),
-                                    steps=5)
+                                    metrics=(self.train_acc, self.test_acc),
+                                    steps=2)
             print(result['train_acc'][-1], result['test_acc'][-1])
             results.append([
-                result['test_loss'][0] + result['test_loss'][1]
+                result['test_loss'][0]
             ])
-            results = sorted(results, key=lambda xx: xx[-1], reverse=True)
+            # results = sorted(results, key=lambda xx: xx[-1], reverse=True)
             utils_progress(f"results[-1][-1]={results[-1][-1]}")
-            print("Saving ckpt...")
-            self.model.saveckpt("./ckpts/wdl_model_" +
-                                str(datetime.datetime.now()).
-                                replace(":", "-").replace(".", "-").
-                                replace(" ", "-").replace("-", "_"))
-            lib = ['x', 'x^2', 'x^3', 'x^4', 'exp', 'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs']
-            self.model.auto_symbolic(lib=lib)
-            formula = self.model.symbolic_formula()[0][0]
-            with open(f"wdl_formula_0.txt", encoding="UTF-8", mode="w") as p:
-                p.write(str(formula).strip())
-            break
+            self.save()
+
 
     def search_params(self):
         self.dataset = self.get_data(
@@ -96,11 +99,7 @@ class Model:
                                     loss_fn=self.loss_fn,
                                     metrics=(self.train_acc, self.test_acc),
                                     steps=2)
-            self.model.auto_symbolic(lib=self.lib)
-            formula = self.model.symbolic_formula()[0][0]
-            with open(self.file_formula, encoding="UTF-8", mode="w") as p:
-                p.write(str(formula).strip())
-            torch.save(self.model.state_dict(), self.state_model)
+            self.save()
             # print(result['test_loss'])
             results.append([hidden_layer1, grid1, k1,
                             result['test_loss'][0]
@@ -296,18 +295,19 @@ class Model:
         return fens
 
 
-    def fen_generator(self, get_score, limit):
+    def fen_random_generator(self, get_score, limit):
         board = chess.Board()
         count = 0
-        while True:
+        endgames = []
+        pieces = ['P', 'p', 'N', 'n', 'B', 'b', 'R', 'r', 'Q', 'q']
+        rnd = random.SystemRandom(0)
+        for _ in range(limit):
             board.clear()
-            endgames = []
-            pieces = ['P', 'p', 'N', 'n', 'B', 'b', 'R', 'r', 'Q', 'q']
             for king in ['K', 'k']:
                 board = self.set_piece(state=board, piece=king)
-            c = random.choice([1, 2, 3, 4])
+            c = rnd.choice([1, 2, 3, 4])
             for _ in range(c):
-                piece = random.choice(pieces)
+                piece = rnd.choice(pieces)
                 board = self.set_piece(state=board, piece=piece)
             board.turn = chess.WHITE
             fen_positions = board.fen()
@@ -339,9 +339,8 @@ class Model:
                     if get_score(fen_positions) is not None:
                         count += 1
                         endgames.append(fen_positions)
-            yield endgames
-            if count > limit:
-                break
+            utils_progress(f"{count}/{limit} | {fen_positions}")
+        return endgames
 
     def test_model(self):
         hidden_layers = 17
@@ -356,7 +355,7 @@ class Model:
         with open(f"wdl_state_0.pkl", mode="rb") as p:
             self.model.__setstate__(pickle.load(p))
         self.dataset = self.get_data(
-            fen_generator=self.fen_generator,
+            fen_generator=self.fen_random_generator,
             get_score=self.get_wdl,
             limit=100
         )
@@ -379,11 +378,7 @@ class Model:
             f"x_{i}": inp[i - 1]
             for i in range(self.len_input, 0, -1)
         }
-        if not os.path.exists(self.file_formula):
-            raise f"Path not exists: '{self.file_formula}'"
-        else:
-            with open(self.file_formula, encoding="UTF-8", mode="r") as p:
-                formula = str(p.read()).strip()
+        formula = self.load()
         print(formula)
         for var, val in variable_values.items():
             formula = str(formula).replace(var, str(val))
