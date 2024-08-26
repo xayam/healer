@@ -19,7 +19,7 @@ class Model:
         self.file_formula = "model_formula_0.txt"
         self.lib = ['x^2', 'x^3', 'x^4', 'exp',
                     'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs'
-                   ]
+                    ]
         self.len_input = 772
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.dtype = torch.get_default_dtype()
@@ -35,6 +35,7 @@ class Model:
         # self.predict()
 
     def save(self):
+        # torch.save(self.model.state_dict(), self.state_model)
         self.model.auto_symbolic(lib=self.lib)
         formula = self.model.symbolic_formula()[0][0]
         with open(self.file_formula, encoding="UTF-8", mode="w") as p:
@@ -60,7 +61,7 @@ class Model:
             self.dataset = self.get_data(
                 fen_generator=self.get_fen,
                 get_score=self.get_score,
-                limit=48//4
+                _limit=48//4
             )
             result = self.model.fit(self.dataset,
                                     metrics=(self.train_acc, self.test_acc),
@@ -70,7 +71,7 @@ class Model:
                 result['test_loss'][0]
             ])
             # results = sorted(results, key=lambda xx: xx[-1], reverse=True)
-            utils_progress(f"results[-1][-1]={results[-1][-1]}")
+            utils_progress(f"result['test_loss'][0]={results[-1][-1]}")
             self.save()
 
 
@@ -79,7 +80,7 @@ class Model:
         self.dataset = self.get_data(
             fen_generator=self.get_fen,
             get_score=self.get_score,
-            limit=4 // 4
+            _limit=48 // 4
         )
         results = []
         maxi = 10 ** 10
@@ -102,7 +103,7 @@ class Model:
             # print(result['test_loss'])
             results.append([hidden_layer1, grid1, k1,
                             result['test_loss'][0]
-            ])
+                            ])
             if result['test_acc'][-1] < maxi:
                 maxi = result['test_acc'][-1]
                 maximum_layer = hidden_layer1
@@ -168,7 +169,7 @@ class Model:
         train_input = [int(state.turn)] + train_input
         return train_input[:self.len_input // 2]
 
-    def get_data(self, fen_generator, get_score, limit):
+    def get_data(self, fen_generator, get_score, _limit):
         count = 0
         count2 = 0
         dataset = {}
@@ -177,7 +178,7 @@ class Model:
         test_inputs = []
         test_labels = []
         board = chess.Board()
-        for fen in fen_generator(get_score, limit):
+        for fen in fen_generator(get_score, _limit):
             scores = []
             boards = []
             try:
@@ -282,11 +283,11 @@ class Model:
             return score
 
 
-    def get_fen(self, get_score, limit):
+    def get_fen(self, get_score, _limit):
         with open("dataset.epdeval", mode="r") as f:
             dataevals = f.readlines()
         fens = []
-        for _ in range(limit):
+        for _ in range(_limit):
             for _ in range(4):
                 dataeval = str(random.choice(dataevals)).strip()
                 spl = dataeval.split(" ")
@@ -295,13 +296,13 @@ class Model:
         return fens
 
 
-    def fen_random_generator(self, get_score, limit):
+    def fen_random_generator(self, get_score, _limit):
         board = chess.Board()
         count = 0
         endgames = []
         pieces = ['P', 'p', 'N', 'n', 'B', 'b', 'R', 'r', 'Q', 'q']
         rnd = random.SystemRandom(0)
-        for _ in range(limit):
+        for _ in range(_limit):
             board.clear()
             for king in ['K', 'k']:
                 board = self.set_piece(state=board, piece=king)
@@ -353,7 +354,7 @@ class Model:
 
     def predict(self):
         print("self.predict() starting...")
-        fens = list(self.get_fen(get_score=self.get_score, limit=1))
+        fens = list(self.get_fen(get_score=self.get_score, _limit=1))
         board1 = chess.Board()
         board1.set_fen(fens[0])
         board2 = chess.Board()
@@ -365,8 +366,8 @@ class Model:
         }
         formula = self.load()
         print(formula)
-        for var, val in variable_values.items():
-            formula = str(formula).replace(var, str(val))
+        for _var, _val in variable_values.items():
+            formula = str(formula).replace(_var, str(_val))
         result = eval(formula)
         print(result)
         print(self.get_score(board2) - self.get_score(board1))
