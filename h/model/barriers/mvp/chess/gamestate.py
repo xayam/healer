@@ -104,12 +104,15 @@ class Field:
 class GameState:
 
     def __init__(self, board):
+        self.board = None
         self.state = None
         self.fields = {}
+        self.figures = {}
         self.init(board=board)
 
     def init(self, board):
-        self.state = board
+        self.clear()
+        self.board = board
         for square in range(64):
             self.add_field(square)
 
@@ -120,3 +123,4 @@ class GameState:
 
     def add_field(self, square):
         self.fields[square] = Field(square=square)
+        self.figures = {}

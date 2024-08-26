@@ -1,6 +1,8 @@
 import pickle
 import datetime
+import random
 
+import torch
 from kan import *
 import chess.engine
 import chess
@@ -22,22 +24,22 @@ class Model:
         self.dtype = torch.get_default_dtype()
         print(self.device, self.dtype)
 
-        self.model = KAN(width=[self.len_input, 17, 1],
+        self.model = KAN(width=[self.len_input, 17, self.len_input],
                          grid=31, k=3,
-                         auto_save=True,
-                         seed=0,
-                         ckpt_path='./wdl_model')
-        try:
-            print("Loading ./ckpts...")
-            self.model.loadckpt("./ckpts")
-        except FileNotFoundError:
-            pass
+                         auto_save=False,
+                         seed=0)
+        # try:
+        #     print("Loading ./ckpts...")
+        #     self.model.loadckpt("./ckpts")
+        # except FileNotFoundError:
+        #     pass
 
+
+    def start(self):
+        self.search_params()
         # self.train()
         # self.test_model()
         # self.predict()
-        self.search_params()
-
     def train(self):
         results = []
         while True:
@@ -48,7 +50,7 @@ class Model:
             )
             result = self.model.fit(self.dataset,
                                     lamb=0.01, lamb_entropy=10,
-                                    metrics=(self.train_acc, self.test_acc),
+                                    # metrics=(self.train_acc, self.test_acc),
                                     steps=5)
             print(result['train_acc'][-1], result['test_acc'][-1])
             results.append([
@@ -72,7 +74,7 @@ class Model:
         self.dataset = self.get_data(
             fen_generator=self.get_fen,
             get_score=self.get_score,
-            limit=400
+            limit=48 // 4
         )
         results = []
         maxi = 10 ** 10
@@ -80,44 +82,60 @@ class Model:
         maximum_grid = 10 ** 10
         maximum_k = 10 ** 10
         while True:
-            hidden_layer = random.choice(list(range(2, 100)))
-            grid = random.choice(list(range(17, 18)))
-            k = random.choice(list(range(3, 4)))
+            rnd = random.SystemRandom(0)
+            hidden_layer1 = rnd.choice(list(range(91, 92)))
+            grid1 = rnd.choice(list(range(40, 41)))
+            k1 = rnd.choice(list(range(3, 4)))
             self.model = KAN(
                 width=[
-                    self.len_input, *[i for i in range(8, 0, -1)], 1
+                    self.len_input, hidden_layer1, 1
                 ],
-                grid=grid, k=k, auto_save=False, seed=0)
+                grid=grid1, k=k1, auto_save=False, seed=0)
             result = self.model.fit(self.dataset,
-                                    lamb=0.00,
+                                    # lamb=0.00,
+                                    loss_fn=self.loss_fn,
                                     # lamb_entropy=10,
                                     metrics=(self.train_acc, self.test_acc),
                                     steps=2)
             # print(result['test_loss'])
-            results.append([hidden_layer, grid, k,
+            results.append([hidden_layer1, grid1, k1,
                             result['test_loss'][0]
             ])
-            if result['test_loss'][0] < maxi:
-                maxi = result['test_loss'][0]
-                maximum_layer = hidden_layer
-                maximum_grid = grid
-                maximum_k = k
+            if result['test_acc'][-1] < maxi:
+                maxi = result['test_acc'][-1]
+                maximum_layer = hidden_layer1
+                maximum_grid = grid1
+                maximum_k = k1
             print()
+            print(result['train_acc'][-1], result['test_acc'][-1])
             print(f"hidden_layer={maximum_layer}, grid={maximum_grid}, k={maximum_k}, " +
-                  f"{result['train_acc'][0]}, {result['test_acc'][0]} " +
                   f"{maxi}"
                   )
-            print(f"hidden_layer={hidden_layer}, grid={grid}, k={k}, {results[-1][-1]}")
+            print(f"hidden_layer={hidden_layer1}, grid={grid1}, k={k1}, {results[-1][-1]}")
+            break
+
+
+    def loss_fn(self, x, y):
+        return torch.abs(torch.mean(x) - torch.mean(y))
 
     def train_acc(self):
-        return torch.mean((torch.round(self.model(self.dataset['train_input'])[:, 0]) ==
-                           self.dataset['train_label'][:, 0]).type(self.dtype))
+        return torch.mean(
+            torch.abs(
+             self.model(self.dataset['train_input'])[:, 0] -
+             self.dataset['train_label'][:, 0]
+            ))
 
     def test_acc(self):
-        return torch.mean((torch.round(self.model(self.dataset['test_input'])[:, 0]) ==
-                           self.dataset['test_label'][:, 0]).type(self.dtype))
+        return torch.mean(
+            torch.abs(
+                self.model(self.dataset['test_input'])[:, 0] -
+                self.dataset['test_label'][:, 0]
+            ))
 
-    def get_train(self, state):
+    def get_train(self, state1, state2):
+        return self.get_state_data(state1) + self.get_state_data(state2)
+
+    def get_state_data(self, state):
         train_input = [[0.] * 64 for _ in range(12)]
         for piece in chess.PIECE_TYPES:
             for square in state.pieces(piece, chess.BLACK):
@@ -145,34 +163,73 @@ class Model:
         else:
             train_input = [state.ep_square] + train_input
         train_input = [int(state.turn)] + train_input
-        return train_input[:self.len_input]
+        return train_input[:self.len_input // 2]
 
     def get_data(self, fen_generator, get_score, limit):
         count = 0
+        count2 = 0
         dataset = {}
         train_inputs = []
         train_labels = []
         test_inputs = []
         test_labels = []
-        # r = random.choice([0, 1])
+        board = chess.Board()
         for endgame in fen_generator(get_score, limit):
             for fen in endgame:
-                score = get_score(fen)
-                if score is None:
+                scores = []
+                boards = []
+                try:
+                    board.set_fen(fen)
+                    score = get_score(board)
+                    if score is None:
+                        continue
+                except chess.engine.EngineError:
                     continue
+                except chess.IllegalMoveError:
+                    continue
+                scores.append(score)
+                boards.append(board.copy())
                 count += 1
-                utils_progress(f"{str(count).rjust(9, ' ')} | " +
-                               f"{str(score).rjust(2, ' ')} | {fen}")
-                board = chess.Board()
-                board.set_fen(fen)
-                train_input = self.get_train(state=board)
+                moves = board.legal_moves
+                for move in moves:
+                    try:
+                        board.push(move)
+                        score = get_score(board)
+                        if score is None:
+                            board.pop()
+                            continue
+                    except chess.engine.EngineError:
+                        break
+                    except chess.IllegalMoveError:
+                        break
+                    scores.append(score)
+                    boards.append(board.copy())
+                    count2 += 1
+                    utils_progress(
+                        f"{str(count).rjust(5, ' ')} | " +
+                        f"{str(count2).rjust(5, ' ')} | " +
+                        f"{str(scores[-1]).rjust(2, ' ')} | {board.fen()}")
+                    board.pop()
                 if count % 2 == 0:
-                    test_inputs.append(train_input)
-                    test_labels.append([score])
+                    for i in range(1, len(boards)):
+                        test_input = self.get_train(state1=boards[0], state2=boards[i])
+                        test_inputs.append(test_input)
+                        test_labels.append([scores[i] - scores[0]])
+                        test_input = self.get_train(state1=boards[i], state2=boards[0])
+                        test_inputs.append(test_input)
+                        test_labels.append([scores[0] - scores[i]])
                 else:
-                    train_inputs.append(train_input)
-                    train_labels.append([score])
-        min_len = min(len(test_inputs), len(train_inputs))
+                    for i in range(1, len(boards)):
+                        train_input = self.get_train(state1=boards[0], state2=boards[i])
+                        train_inputs.append(train_input)
+                        train_labels.append([scores[i] - scores[0]])
+                        train_input = self.get_train(state1=boards[i], state2=boards[0])
+                        train_inputs.append(train_input)
+                        train_labels.append([scores[0] - scores[i]])
+        print()
+        min_len = min(len(test_inputs), len(train_inputs),
+                      len(test_labels), len(train_labels),
+                      )
         test_inputs = test_inputs[:min_len]
         test_labels = test_labels[:min_len]
         train_inputs = train_inputs[:min_len]
@@ -211,30 +268,29 @@ class Model:
         return state
 
     @staticmethod
-    def get_score(fen, depth=10):
+    def get_score(state, depth=10):
         str_stockfish = 'D:/Work2/PyCharm/SmartEval2/github/src/poler/poler/bin' + \
                         '/stockfish-windows-x86-64-avx2.exe'
-        state = chess.Board()
-        state.set_fen(fen)
         with chess.engine.SimpleEngine.popen_uci(str_stockfish) as sf:
             result = sf.analyse(state, chess.engine.Limit(depth=depth))
-            if state.turn == chess.WHITE:
-                score = result['score'].white().score()
-            else:
-                score = result['score'].black().score()
+            # if state.turn == chess.WHITE:
+            score = result['score'].white().score()
+            # else:
+            #     score = result['score'].black().score()
             return score
 
 
     def get_fen(self, get_score, limit):
         with open("dataset.epdeval", mode="r") as f:
             dataevals = f.readlines()
-        fens = []
         for _ in range(limit):
-            dataeval = str(random.choice(dataevals)).strip()
-            spl = dataeval.split(" ")
-            fen = " ".join(spl[:-1])
-            fens.append(fen)
-        yield fens
+            fens = []
+            for _ in range(4):
+                dataeval = str(random.choice(dataevals)).strip()
+                spl = dataeval.split(" ")
+                fen = " ".join(spl[:-1])
+                fens.append(fen)
+            yield fens
 
 
     def fen_generator(self, get_score, limit):
@@ -313,7 +369,7 @@ class Model:
         self.dataset = self.get_data(
             fen_generator=self.fen_generator,
             get_score=self.get_wdl,
-            limit=100
+            limit=1
         )
         fen = list(self.get_fen(get_score=self.get_score, limit=2))[0][0]
         board = chess.Board()
@@ -335,4 +391,5 @@ class Model:
 
 
 if __name__ == "__main__":
-    Model()
+    model = Model()
+    model.start()
