@@ -1,6 +1,4 @@
 import os.path
-import pickle
-import datetime
 
 from kan import *
 import chess.engine
@@ -19,7 +17,7 @@ class Model:
         self.last_fen = None
         self.state_model = "model.pth"
         self.file_formula = "model_formula_0.txt"
-        self.lib = ['x', 'x^2', 'x^3', 'x^4', 'exp',
+        self.lib = ['x^2', 'x^3', 'x^4', 'exp',
                     'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs'
                    ]
         self.len_input = 772
@@ -27,7 +25,7 @@ class Model:
         self.dtype = torch.get_default_dtype()
         print(self.device, self.dtype)
 
-        self.load()
+        self.formula = self.load()
 
 
     def start(self):
@@ -50,12 +48,13 @@ class Model:
         if os.path.exists(self.state_model):
             self.model.load_state_dict(torch.load(self.state_model))
         if not os.path.exists(self.file_formula):
-            raise f"Path not exists: '{self.file_formula}'"
+            return None
         else:
             with open(self.file_formula, encoding="UTF-8", mode="r") as p:
                 return str(p.read()).strip()
 
     def train(self):
+        print("self.train() starting...")
         results = []
         while True:
             self.dataset = self.get_data(
@@ -76,18 +75,19 @@ class Model:
 
 
     def search_params(self):
+        print("self.search_params() starting...")
         self.dataset = self.get_data(
             fen_generator=self.get_fen,
             get_score=self.get_score,
-            limit=48 // 4
+            limit=4 // 4
         )
         results = []
         maxi = 10 ** 10
         maximum_layer = 10 ** 10
         maximum_grid = 10 ** 10
         maximum_k = 10 ** 10
+        rnd = random.SystemRandom(0)
         while True:
-            rnd = random.SystemRandom(0)
             hidden_layer1 = rnd.choice(list(range(91, 92)))
             grid1 = rnd.choice(list(range(40, 41)))
             k1 = rnd.choice(list(range(3, 4)))
@@ -99,7 +99,6 @@ class Model:
                                     loss_fn=self.loss_fn,
                                     metrics=(self.train_acc, self.test_acc),
                                     steps=2)
-            self.save()
             # print(result['test_loss'])
             results.append([hidden_layer1, grid1, k1,
                             result['test_loss'][0]
@@ -115,6 +114,7 @@ class Model:
                   f"{maxi}"
                   )
             print(f"hidden_layer={hidden_layer1}, grid={grid1}, k={k1}, {results[-1][-1]}")
+            self.save()
             break
 
 
@@ -343,31 +343,16 @@ class Model:
         return endgames
 
     def test_model(self):
-        hidden_layers = 17
-        grid = 31
-        k = 3
-        self.model = KAN(width=[130, hidden_layers, 1], grid=grid, k=k,
-                         seed=0, ckpt_path='./wdl_model')
-        print("Loading formula...")
-        with open(f"wdl_formula_0.txt", encoding="UTF-8", mode="r") as p:
-            formula1 = p.read()
-        print("Loading state...")
-        with open(f"wdl_state_0.pkl", mode="rb") as p:
-            self.model.__setstate__(pickle.load(p))
-        self.dataset = self.get_data(
-            fen_generator=self.fen_random_generator,
-            get_score=self.get_wdl,
-            limit=100
-        )
-        self.model.fit(self.dataset, steps=2)
-        lib = ['x', 'x^2', 'x^3', 'x^4', 'exp', 'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs']
-        self.model.auto_symbolic(lib=lib)
-        formula2 = self.model.symbolic_formula()[0][0]
-        print(str(formula1 == formula2))
-        with open(f"wdl_formula_1.txt", encoding="UTF-8", mode="w") as p:
-            p.write(formula2)
+        print("self.test_model() starting...")
+        # self.dataset = self.get_data(
+        #     fen_generator=self.fen_random_generator,
+        #     get_score=self.get_wdl,
+        #     limit=4
+        # )
+        print(self.formula)
 
     def predict(self):
+        print("self.predict() starting...")
         fens = list(self.get_fen(get_score=self.get_score, limit=1))
         board1 = chess.Board()
         board1.set_fen(fens[0])
