@@ -2,8 +2,9 @@ import json
 import os.path
 
 from kan import *
-import chess.engine
+
 import chess
+import chess.engine
 import chess.syzygy
 
 from h.model.utils import utils_progress
@@ -21,6 +22,9 @@ class Model:
         self.model_json = None
         self.model_option = None
         self.lib = None
+        self.str_stockfish = None
+        self.syzygy = None
+        self.epdeval = None
         self.len_input = None
         self.limit = None
         self.device = None
@@ -37,11 +41,20 @@ class Model:
         self.lib = ['x', 'x^2', 'x^3', 'x^4', 'exp',
                     'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs'
                     ]
+        self.str_stockfish = 'D:/Work2/PyCharm/SmartEval2/github/src/poler/poler/bin' + \
+                             '/stockfish-windows-x86-64-avx2.exe'
+        self.syzygy = {
+            "wdl345": "E:/Chess/syzygy/3-4-5-wdl",
+            "wdl6": "E:/Chess/syzygy/6-wdl",
+        }
+        self.epdeval = "dataset.epdeval"
         self.len_input = 64 * 12 + 4
         self.limit = 48 // 4
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.dtype = torch.get_default_dtype()
-        print(self.device, self.dtype)
+
+        print(str(self.device).upper(), self.dtype)
+
         self.formula = self.load_model()
 
     def start(self):
@@ -60,10 +73,10 @@ class Model:
             command = 1
         if command not in commands.keys():
             command = 1
+
         commands[command]["call"]()
 
     def save_model(self):
-        # torch.save(self.model.state_dict(), self.state_model)
         self.model.auto_symbolic(lib=self.lib)
         formula = self.model.symbolic_formula()[0][0]
         with open(self.file_formula, encoding="UTF-8", mode="w") as p:
@@ -71,6 +84,7 @@ class Model:
         torch.save(self.model.state_dict(), self.state_model)
 
     def load_model(self):
+        print("Loading model...")
         self.model_option = {
             "hidden_layer": 91,
             "grid": 40,
@@ -126,7 +140,6 @@ class Model:
             self.model = KAN(
                 width=[self.len_input, hidden_layer1, 1],
                 grid=grid1, k=k1, auto_save=False, seed=0)
-            self.model.load_state_dict(torch.load(self.state_model))
             result = self.model.fit(self.dataset,
                                     loss_fn=self.loss_func,
                                     metrics=(self.train_acc, self.test_acc),
@@ -281,13 +294,13 @@ class Model:
             torch.FloatTensor(test_labels).type(self.dtype).to(self.device)
         return dataset
 
-    @staticmethod
-    def get_wdl(fen_position):
-        with chess.syzygy.open_tablebase("E:/Chess/syzygy/3-4-5-wdl") as tablebase:
+
+    def get_wdl(self, fen_position):
+        with chess.syzygy.open_tablebase(self.syzygy["wdl345"]) as tablebase:
             board = chess.Board(fen_position)
             result = tablebase.get_wdl(board)
         if result is None:
-            with chess.syzygy.open_tablebase("E:/Chess/syzygy/6-wdl") as tablebase:
+            with chess.syzygy.open_tablebase(self.syzygy["wdl6"]) as tablebase:
                 board = chess.Board(fen_position)
                 result = tablebase.get_wdl(board)
         return result
@@ -304,11 +317,9 @@ class Model:
             break
         return state
 
-    @staticmethod
-    def get_score(state, depth=10):
-        str_stockfish = 'D:/Work2/PyCharm/SmartEval2/github/src/poler/poler/bin' + \
-                        '/stockfish-windows-x86-64-avx2.exe'
-        with chess.engine.SimpleEngine.popen_uci(str_stockfish) as sf:
+
+    def get_score(self, state, depth=10):
+        with chess.engine.SimpleEngine.popen_uci(self.str_stockfish) as sf:
             result = sf.analyse(state, chess.engine.Limit(depth=depth))
             # if state.turn == chess.WHITE:
             score = result['score'].white().score()
@@ -318,7 +329,7 @@ class Model:
 
 
     def get_fen(self, get_score, _limit):
-        with open("dataset.epdeval", mode="r") as f:
+        with open(self.epdeval, mode="r") as f:
             dataevals = f.readlines()
         fens = []
         for _ in range(_limit):
@@ -404,7 +415,8 @@ class Model:
         result = eval(formula)
         print(result)
         print(self.get_score(board2) - self.get_score(board1))
-        print(fens[0], fens[1])
+        print(fens[0])
+        print(fens[1])
 
 
 if __name__ == "__main__":
