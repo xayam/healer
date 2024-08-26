@@ -12,6 +12,7 @@ from h.model.utils import utils_progress
 class Model:
 
     def __init__(self):
+        self.random = None
         self.model = None
         self.dataset = None
         self.last_fen = None
@@ -29,6 +30,7 @@ class Model:
         self.init_model()
 
     def init_model(self):
+        self.random = random.SystemRandom(0)
         self.state_model = "model.pth"
         self.file_formula = "model_formula_0.txt"
         self.model_json = "model.json"
@@ -120,7 +122,6 @@ class Model:
         maximum_layer = 10 ** 10
         maximum_grid = 10 ** 10
         maximum_k = 10 ** 10
-        rnd = random.SystemRandom(0)
         while True:
             self.model = KAN(
                 width=[self.len_input, hidden_layer1, 1],
@@ -146,9 +147,9 @@ class Model:
                   f"maxi_test_acc={maxi}")
             print(f"hidden_layer={hidden_layer1}, grid={grid1}, " +
                   f"k={k1}, test_loss={result['test_loss'][0]}")
-            hidden_layer1 = rnd.choice(list(range(5, 101)))
-            grid1 = rnd.choice(list(range(5, 51)))
-            k1 = rnd.choice(list(range(3, 26)))
+            hidden_layer1 = self.random.choice(list(range(5, 101)))
+            grid1 = self.random.choice(list(range(5, 51)))
+            k1 = self.random.choice(list(range(3, 26)))
 
 
     @staticmethod
@@ -291,10 +292,10 @@ class Model:
                 result = tablebase.get_wdl(board)
         return result
 
-    @staticmethod
-    def set_piece(state, piece):
+
+    def set_piece(self, state, piece):
         while True:
-            pos = random.choice(list(range(64)))
+            pos = self.random.choice(list(range(64)))
             row, col = divmod(pos, 8)
             sq = chess.square(col, row)
             if state.piece_at(sq) is not None:
@@ -315,14 +316,14 @@ class Model:
             #     score = result['score'].black().score()
             return score
 
-    @staticmethod
-    def get_fen(get_score, _limit):
+
+    def get_fen(self, get_score, _limit):
         with open("dataset.epdeval", mode="r") as f:
             dataevals = f.readlines()
         fens = []
         for _ in range(_limit):
             for _ in range(4):
-                dataeval = str(random.choice(dataevals)).strip()
+                dataeval = str(self.random.choice(dataevals)).strip()
                 spl = dataeval.split(" ")
                 fen = " ".join(spl[:-1])
                 fens.append(fen)
@@ -334,14 +335,13 @@ class Model:
         count = 0
         endgames = []
         pieces = ['P', 'p', 'N', 'n', 'B', 'b', 'R', 'r', 'Q', 'q']
-        rnd = random.SystemRandom(0)
         for _ in range(_limit):
             board.clear()
             for king in ['K', 'k']:
                 board = self.set_piece(state=board, piece=king)
-            c = rnd.choice([1, 2, 3, 4])
+            c = self.random.choice([1, 2, 3, 4])
             for _ in range(c):
-                piece = rnd.choice(pieces)
+                piece = self.random.choice(pieces)
                 board = self.set_piece(state=board, piece=piece)
             board.turn = chess.WHITE
             fen_positions = board.fen()
