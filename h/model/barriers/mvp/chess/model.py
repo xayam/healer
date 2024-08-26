@@ -27,9 +27,9 @@ class Model:
         self.dtype = None
         self.formula = None
 
-        self.init()
+        self.init_model()
 
-    def init(self):
+    def init_model(self):
         self.state_model = "model.pth"
         self.file_formula = "model_formula_0.txt"
         self.model_json = "model.json"
@@ -41,15 +41,30 @@ class Model:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.dtype = torch.get_default_dtype()
         print(self.device, self.dtype)
-        self.formula = self.load()
+        self.formula = self.load_model()
 
     def start(self):
-        self.search_params()
-        # self.train()
-        # self.test_model()
-        # self.make_predict()
+        print("Available commands:")
+        print("          1. Search params")
+        print("          2. Fine-Tune model")
+        print("          3. Test model")
+        print("          4. Make predict")
+        # try:
+        command = int(input("Choice command [default 1]: "))
+        # except:
+        #     command = 1
+        if command not in [1, 2, 3, 4]:
+            command = 1
+        if command == 1:
+            self.search_params()
+        elif command == 2:
+            self.finetune_model()
+        elif command == 3:
+            self.test_model()
+        else:
+            self.make_predict()
 
-    def save(self):
+    def save_model(self):
         # torch.save(self.model.state_dict(), self.state_model)
         self.model.auto_symbolic(lib=self.lib)
         formula = self.model.symbolic_formula()[0][0]
@@ -57,7 +72,7 @@ class Model:
             p.write(str(formula).strip())
         torch.save(self.model.state_dict(), self.state_model)
 
-    def load(self):
+    def load_model(self):
         self.model_option = {
             "hidden_layer": 91,
             "grid": 40,
@@ -78,8 +93,8 @@ class Model:
             with open(self.file_formula, encoding="UTF-8", mode="r") as p:
                 return str(p.read()).strip()
 
-    def train(self):
-        print("self.train() starting...")
+    def finetune_model(self):
+        print("self.finetune_model() starting...")
         while True:
             self.dataset = self.get_data(
                 fen_generator=self.get_fen,
@@ -92,7 +107,7 @@ class Model:
                                     steps=20)
             print(result['train_acc'][-1], result['test_acc'][-1])
             utils_progress(f"result['test_loss'][0]={result['test_loss'][0]}")
-            self.save()
+            self.save_model()
 
 
     def search_params(self):
@@ -386,7 +401,7 @@ class Model:
             f"x_{i}": inp[i - 1]
             for i in range(self.len_input, 0, -1)
         }
-        formula = self.load()
+        formula = self.load_model()
         print(formula)
         for _var, _val in variable_values.items():
             formula = str(formula).replace(_var, str(_val))
