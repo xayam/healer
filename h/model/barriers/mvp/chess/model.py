@@ -178,58 +178,57 @@ class Model:
         test_inputs = []
         test_labels = []
         board = chess.Board()
-        for endgame in fen_generator(get_score, limit):
-            for fen in endgame:
-                scores = []
-                boards = []
+        for fen in fen_generator(get_score, limit):
+            scores = []
+            boards = []
+            try:
+                board.set_fen(fen)
+                score = get_score(board)
+                if score is None:
+                    continue
+            except chess.engine.EngineError:
+                continue
+            except chess.IllegalMoveError:
+                continue
+            scores.append(score)
+            boards.append(board.copy())
+            count += 1
+            moves = board.legal_moves
+            for move in moves:
                 try:
-                    board.set_fen(fen)
+                    board.push(move)
                     score = get_score(board)
                     if score is None:
+                        board.pop()
                         continue
                 except chess.engine.EngineError:
-                    continue
+                    break
                 except chess.IllegalMoveError:
-                    continue
+                    break
                 scores.append(score)
                 boards.append(board.copy())
-                count += 1
-                moves = board.legal_moves
-                for move in moves:
-                    try:
-                        board.push(move)
-                        score = get_score(board)
-                        if score is None:
-                            board.pop()
-                            continue
-                    except chess.engine.EngineError:
-                        break
-                    except chess.IllegalMoveError:
-                        break
-                    scores.append(score)
-                    boards.append(board.copy())
-                    count2 += 1
-                    utils_progress(
-                        f"{str(count).rjust(5, ' ')} | " +
-                        f"{str(count2).rjust(5, ' ')} | " +
-                        f"{str(scores[-1]).rjust(2, ' ')} | {board.fen()}")
-                    board.pop()
-                if count % 2 == 0:
-                    for i in range(1, len(boards)):
-                        test_input = self.get_train(state1=boards[0], state2=boards[i])
-                        test_inputs.append(test_input)
-                        test_labels.append([scores[i] - scores[0]])
-                        test_input = self.get_train(state1=boards[i], state2=boards[0])
-                        test_inputs.append(test_input)
-                        test_labels.append([scores[0] - scores[i]])
-                else:
-                    for i in range(1, len(boards)):
-                        train_input = self.get_train(state1=boards[0], state2=boards[i])
-                        train_inputs.append(train_input)
-                        train_labels.append([scores[i] - scores[0]])
-                        train_input = self.get_train(state1=boards[i], state2=boards[0])
-                        train_inputs.append(train_input)
-                        train_labels.append([scores[0] - scores[i]])
+                count2 += 1
+                utils_progress(
+                    f"{str(count).rjust(5, ' ')} | " +
+                    f"{str(count2).rjust(5, ' ')} | " +
+                    f"{str(scores[-1]).rjust(2, ' ')} | {board.fen()}")
+                board.pop()
+            if count % 2 == 0:
+                for i in range(1, len(boards)):
+                    test_input = self.get_train(state1=boards[0], state2=boards[i])
+                    test_inputs.append(test_input)
+                    test_labels.append([scores[i] - scores[0]])
+                    test_input = self.get_train(state1=boards[i], state2=boards[0])
+                    test_inputs.append(test_input)
+                    test_labels.append([scores[0] - scores[i]])
+            else:
+                for i in range(1, len(boards)):
+                    train_input = self.get_train(state1=boards[0], state2=boards[i])
+                    train_inputs.append(train_input)
+                    train_labels.append([scores[i] - scores[0]])
+                    train_input = self.get_train(state1=boards[i], state2=boards[0])
+                    train_inputs.append(train_input)
+                    train_labels.append([scores[0] - scores[i]])
         print()
         min_len = min(len(test_inputs), len(train_inputs),
                       len(test_labels), len(train_labels),
