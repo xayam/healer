@@ -23,23 +23,23 @@ class Model:
         self.pre_model_json = None
         self.model_json = None
         self.model_option = None
-        self.lib = None
-        self.str_stockfish = None
+        self.lib_formula = None
+        self.engine_stockfish = None
         self.syzygy_endgame = None
-        self.epdeval = None
+        self.epd_eval = None
         self.len_input = None
         self.count_limit = None
         self.device = None
         self.dtype = None
         self.formula = None
 
-        self.init_model()
+        self.model_init()
 
-    def init_model(self):
+    def model_init(self):
         self.commands = {
-            1: {"call": self.search_params, "desc": "Search params"},
-            2: {"call": self.finetune_model, "desc": "Fine-Tune model"},
-            3: {"call": self.test_model, "desc": "Test model"},
+            1: {"call": self.model_params, "desc": "Search gyper-params"},
+            2: {"call": self.model_finetune, "desc": "Fine-Tune model"},
+            3: {"call": self.model_test, "desc": "Test model"},
             4: {"call": self.make_predict, "desc": "Make predict"},
         }
         self.random = random.SystemRandom(0)
@@ -52,19 +52,19 @@ class Model:
         self.file_formula = "model_formula_0.txt"
         self.pre_model_json = "pre_model.json"
         self.model_json = "model.json"
-        self.lib = ['x', 'x^2', 'x^3', 'x^4', 'exp',
+        self.lib_formula = ['x', 'x^2', 'x^3', 'x^4', 'exp',
                     'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs'
-                    ]
-        self.str_stockfish = \
+                            ]
+        self.engine_stockfish = \
             'D:/Work2/PyCharm/SmartEval2/github/src/poler/poler/bin' + \
             '/stockfish-windows-x86-64-avx2.exe'
         self.syzygy_endgame = {
             "wdl345": "E:/Chess/syzygy_endgame/3-4-5-wdl",
             "wdl6": "E:/Chess/syzygy_endgame/6-wdl",
         }
-        self.epdeval = "dataset.epdeval"
+        self.epd_eval = "dataset.epdeval"
         self.len_input = 64 * 12 + 4
-        self.count_limit = 48 // 4
+        self.count_limit = 48
         self.device = torch.device(
             'cuda' if torch.cuda.is_available() else 'cpu'
         )
@@ -72,7 +72,7 @@ class Model:
 
         print(str(self.device).upper(), self.dtype)
 
-        self.formula = self.load_model()
+        self.formula = self.model_load()
 
     def start(self):
         print("Available commands:")
@@ -87,14 +87,14 @@ class Model:
 
         self.commands[command]["call"]()
 
-    def save_model(self):
+    def model_save(self):
         torch.save(self.model.state_dict(), self.file_model)
-        self.model.auto_symbolic(lib=self.lib)
+        self.model.auto_symbolic(lib=self.lib_formula)
         formula = self.model.symbolic_formula()[0][0]
         with open(self.file_formula, encoding="UTF-8", mode="w") as p:
             p.write(str(formula).strip())
 
-    def load_model(self):
+    def model_load(self):
         print("Loading model...")
         if os.path.exists(self.model_json):
             with open(self.model_json, "r") as f:
@@ -114,8 +114,8 @@ class Model:
             with open(self.file_formula, encoding="UTF-8", mode="r") as p:
                 return str(p.read()).strip()
 
-    def finetune_model(self):
-        print("self.finetune_model() starting...")
+    def model_finetune(self):
+        print("self.model_finetune() starting...")
         while True:
             self.dataset = self.get_data(
                 fen_generator=self.get_fen_epd,
@@ -131,11 +131,11 @@ class Model:
                                     steps=20)
             print(result['train_accuracy'][-1], result['test_accuracy'][-1])
             utils_progress(f"result['test_loss'][0]={result['test_loss'][0]}")
-            self.save_model()
+            self.model_save()
 
 
-    def search_params(self):
-        print("self.search_params() starting...")
+    def model_params(self):
+        print("self.model_params() starting...")
         self.dataset = self.get_data(
             fen_generator=self.get_fen_epd,
             get_score=self.get_score,
@@ -204,9 +204,9 @@ class Model:
             ))
 
     def get_train(self, state1, state2):
-        return self.get_state_data(state1) + self.get_state_data(state2)
+        return self.get_input(state1) + self.get_input(state2)
 
-    def get_state_data(self, state):
+    def get_input(self, state):
         train_input = [[0.] * 64 for _ in range(12)]
         for piece in chess.PIECE_TYPES:
             for square in state.pieces(piece, chess.BLACK):
@@ -352,7 +352,7 @@ class Model:
 
 
     def get_score(self, state, depth=10):
-        with chess.engine.SimpleEngine.popen_uci(self.str_stockfish) as sf:
+        with chess.engine.SimpleEngine.popen_uci(self.engine_stockfish) as sf:
             result = sf.analyse(state, chess.engine.Limit(depth=depth))
             # if state.turn == chess.WHITE:
             score = result['score'].white().score()
@@ -362,15 +362,14 @@ class Model:
 
 
     def get_fen_epd(self, get_score, count_limit):
-        with open(self.epdeval, mode="r") as f:
+        with open(self.epd_eval, mode="r") as f:
             dataevals = f.readlines()
         fens = []
         for _ in range(count_limit):
-            for _ in range(4):
-                dataeval = str(self.random.choice(dataevals)).strip()
-                spl = dataeval.split(" ")
-                fen = " ".join(spl[:-1])
-                fens.append(fen)
+            dataeval = str(self.random.choice(dataevals)).strip()
+            spl = dataeval.split(" ")
+            fen = " ".join(spl[:-1])
+            fens.append(fen)
         return fens
 
 
@@ -420,8 +419,8 @@ class Model:
             utils_progress(f"{count}/{count_limit} | {fen_positions}")
         return endgames
 
-    def test_model(self):
-        print("self.test_model() starting...")
+    def model_test(self):
+        print("self.model_test() starting...")
         # self.dataset = self.get_data(
         #     fen_generator=self.get_fen_random,
         #     get_score=self.get_wdl,
@@ -443,7 +442,7 @@ class Model:
             f"x_{i}": inp[i - 1]
             for i in range(self.len_input, 0, -1)
         }
-        formula = self.load_model()
+        formula = self.model_load()
         print(formula)
         for _var, _val in variable_values.items():
             formula = str(formula).replace(_var, str(_val))
