@@ -1,3 +1,4 @@
+import os.path
 import pickle
 import datetime
 import random
@@ -19,20 +20,21 @@ class Model:
         self.model = None
         self.dataset = None
         self.last_fen = None
+        self.state_model = "model.pth"
+        self.file_formula = "model_formula_0.txt"
+        self.lib = ['x', 'x^2', 'x^3', 'x^4', 'exp',
+                    'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs'
+                   ]
         self.len_input = 772
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.dtype = torch.get_default_dtype()
         print(self.device, self.dtype)
 
-        self.model = KAN(width=[self.len_input, 17, self.len_input],
-                         grid=31, k=3,
-                         auto_save=False,
-                         seed=0)
-        # try:
-        #     print("Loading ./ckpts...")
-        #     self.model.loadckpt("./ckpts")
-        # except FileNotFoundError:
-        #     pass
+        self.model = KAN(
+            width=[self.len_input, 91, 1],
+            grid=40, k=3, auto_save=False, seed=0)
+        if os.path.exists(self.state_model):
+            self.model.load_state_dict(torch.load(self.state_model))
 
 
     def start(self):
@@ -87,16 +89,18 @@ class Model:
             grid1 = rnd.choice(list(range(40, 41)))
             k1 = rnd.choice(list(range(3, 4)))
             self.model = KAN(
-                width=[
-                    self.len_input, hidden_layer1, 1
-                ],
+                width=[self.len_input, hidden_layer1, 1],
                 grid=grid1, k=k1, auto_save=False, seed=0)
+            self.model.load_state_dict(torch.load(self.state_model))
             result = self.model.fit(self.dataset,
-                                    # lamb=0.00,
                                     loss_fn=self.loss_fn,
-                                    # lamb_entropy=10,
                                     metrics=(self.train_acc, self.test_acc),
                                     steps=2)
+            self.model.auto_symbolic(lib=self.lib)
+            formula = self.model.symbolic_formula()[0][0]
+            with open(self.file_formula, encoding="UTF-8", mode="w") as p:
+                p.write(str(formula).strip())
+            torch.save(self.model.state_dict(), self.state_model)
             # print(result['test_loss'])
             results.append([hidden_layer1, grid1, k1,
                             result['test_loss'][0]
@@ -283,14 +287,14 @@ class Model:
     def get_fen(self, get_score, limit):
         with open("dataset.epdeval", mode="r") as f:
             dataevals = f.readlines()
+        fens = []
         for _ in range(limit):
-            fens = []
             for _ in range(4):
                 dataeval = str(random.choice(dataevals)).strip()
                 spl = dataeval.split(" ")
                 fen = " ".join(spl[:-1])
                 fens.append(fen)
-            yield fens
+        return fens
 
 
     def fen_generator(self, get_score, limit):
@@ -366,28 +370,28 @@ class Model:
             p.write(formula2)
 
     def predict(self):
-        self.dataset = self.get_data(
-            fen_generator=self.fen_generator,
-            get_score=self.get_wdl,
-            limit=1
-        )
-        fen = list(self.get_fen(get_score=self.get_score, limit=2))[0][0]
-        board = chess.Board()
-        board.set_fen(fen)
-        inp = self.get_train(state=board)
-        print(inp)
+        fens = list(self.get_fen(get_score=self.get_score, limit=1))
+        board1 = chess.Board()
+        board1.set_fen(fens[0])
+        board2 = chess.Board()
+        board2.set_fen(fens[1])
+        inp = self.get_train(state1=board1, state2=board2)
         variable_values = {
-            f"x_{i}": int(inp[i - 1])
+            f"x_{i}": inp[i - 1]
             for i in range(self.len_input, 0, -1)
         }
-        with open(f"wdl_formula_0.txt", encoding="UTF-8", mode="r") as p:
-            formula = p.read()
+        if not os.path.exists(self.file_formula):
+            raise f"Path not exists: '{self.file_formula}'"
+        else:
+            with open(self.file_formula, encoding="UTF-8", mode="r") as p:
+                formula = str(p.read()).strip()
         print(formula)
         for var, val in variable_values.items():
             formula = str(formula).replace(var, str(val))
         result = eval(formula)
         print(result)
-        print(fen, self.get_score(fen))
+        print(self.get_score(board2) - self.get_score(board1))
+        print(fens[0], fens[1])
 
 
 if __name__ == "__main__":
