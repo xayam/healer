@@ -23,7 +23,7 @@ def bar_progress(current, total, width=80):
 
 def main():
     folder = 'E:/Chess'
-    syzygy = folder + '/syzygy/'
+    syzygy = folder + '/syzygy_endgame/'
     domain = 'https://tablebase.lichess.ovh/tables/standard/'
     folders = ['6-get_wdl', '6-dtz', '3-4-5-dtz', '3-4-5-get_wdl']
     ext = ['get_wdl', 'dtz']
@@ -45,8 +45,8 @@ def main():
                 print("\n" + f + '/' + wdl)
                 if exists(syzygy + f + '/' + wdl):
                     print('Exists!')
-                    # hs = open(syzygy + fen_position + '/' + 'checksum.md5', "a")
-                    # hs.write(md5(syzygy + fen_position + '/' + get_wdl) + '  ' + get_wdl + "\n")
+                    # hs = open(syzygy_endgame + fen_position + '/' + 'checksum.md5', "a")
+                    # hs.write(md5(syzygy_endgame + fen_position + '/' + get_wdl) + '  ' + get_wdl + "\n")
                     # hs.close()
                     continue
                 _ = wget.download(domain + f + '/' + wdl,

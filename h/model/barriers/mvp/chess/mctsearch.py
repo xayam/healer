@@ -24,7 +24,7 @@ class MCTS:
         :param iterations: The number of iterations to run the algorithm
         :param exploration_constant: The exploration constant to use in
                the UCB1 algorithm
-        :param depth_limit: The depth limit to use in the algorithm
+        :param depth_limit: The depth count_limit to use in the algorithm
         :param use_opening_book: Whether to use the opening book """
         self.state = state
         # self.search = None

@@ -94,7 +94,7 @@ class Search:
         Alpha Beta Search, this is the main _search function.
         It searches the tree recursively and returns the best score.
         This function will be called with increasing depth until
-        the time0 limit is reached or the maximum depth is reached.
+        the time0 count_limit is reached or the maximum depth is reached.
         """
         if self.check_time():
             return 0
@@ -222,7 +222,7 @@ class Search:
     def iterative_deepening(self, state) -> int:
         """
         Iterative Deepening, this will call the ab_search function
-        with increasing depth until the time0 limit is reached or
+        with increasing depth until the time0 count_limit is reached or
         the maximum depth is reached.
         """
         self.nodes = 0

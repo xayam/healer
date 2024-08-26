@@ -25,10 +25,10 @@ class Model:
         self.model_option = None
         self.lib = None
         self.str_stockfish = None
-        self.syzygy = None
+        self.syzygy_endgame = None
         self.epdeval = None
         self.len_input = None
-        self.limit = None
+        self.count_limit = None
         self.device = None
         self.dtype = None
         self.formula = None
@@ -55,16 +55,19 @@ class Model:
         self.lib = ['x', 'x^2', 'x^3', 'x^4', 'exp',
                     'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs'
                     ]
-        self.str_stockfish = 'D:/Work2/PyCharm/SmartEval2/github/src/poler/poler/bin' + \
-                             '/stockfish-windows-x86-64-avx2.exe'
-        self.syzygy = {
-            "wdl345": "E:/Chess/syzygy/3-4-5-wdl",
-            "wdl6": "E:/Chess/syzygy/6-wdl",
+        self.str_stockfish = \
+            'D:/Work2/PyCharm/SmartEval2/github/src/poler/poler/bin' + \
+            '/stockfish-windows-x86-64-avx2.exe'
+        self.syzygy_endgame = {
+            "wdl345": "E:/Chess/syzygy_endgame/3-4-5-wdl",
+            "wdl6": "E:/Chess/syzygy_endgame/6-wdl",
         }
         self.epdeval = "dataset.epdeval"
         self.len_input = 64 * 12 + 4
-        self.limit = 48 // 4
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.count_limit = 48 // 4
+        self.device = torch.device(
+            'cuda' if torch.cuda.is_available() else 'cpu'
+        )
         self.dtype = torch.get_default_dtype()
 
         print(str(self.device).upper(), self.dtype)
@@ -115,15 +118,18 @@ class Model:
         print("self.finetune_model() starting...")
         while True:
             self.dataset = self.get_data(
-                fen_generator=self.get_fen,
+                fen_generator=self.get_fen_epd,
                 get_score=self.get_score,
-                _limit=self.limit
+                count_limit=self.count_limit
             )
             result = self.model.fit(self.dataset,
-                                    loss_fn=self.loss_func,
-                                    metrics=(self.train_acc, self.test_acc),
+                                    loss_fn=self.loss_function,
+                                    metrics=(
+                                        self.train_accuracy,
+                                        self.test_accuracy
+                                    ),
                                     steps=20)
-            print(result['train_acc'][-1], result['test_acc'][-1])
+            print(result['train_accuracy'][-1], result['test_accuracy'][-1])
             utils_progress(f"result['test_loss'][0]={result['test_loss'][0]}")
             self.save_model()
 
@@ -131,10 +137,13 @@ class Model:
     def search_params(self):
         print("self.search_params() starting...")
         self.dataset = self.get_data(
-            fen_generator=self.get_fen,
+            fen_generator=self.get_fen_epd,
             get_score=self.get_score,
-            _limit=self.limit
+            count_limit=self.count_limit
         )
+        if os.path.exists(self.pre_model_json):
+            with open(self.pre_model_json, "r") as f:
+                self.model_option = json.load(f)
         hidden_layer1 = self.model_option["hidden_layer"]
         grid1 = self.model_option["grid"]
         k1 = self.model_option["k"]
@@ -147,11 +156,14 @@ class Model:
                 width=[self.len_input, hidden_layer1, 1],
                 grid=grid1, k=k1, auto_save=False, seed=0)
             result = self.model.fit(self.dataset,
-                                    loss_fn=self.loss_func,
-                                    metrics=(self.train_acc, self.test_acc),
+                                    loss_fn=self.loss_function,
+                                    metrics=(
+                                        self.train_accuracy,
+                                        self.test_accuracy
+                                    ),
                                     steps=2)
-            if result['test_acc'][-1] < maxi:
-                maxi = result['test_acc'][-1]
+            if result['test_accuracy'][-1] < maxi:
+                maxi = result['test_accuracy'][-1]
                 maximum_layer = hidden_layer1
                 maximum_grid = grid1
                 maximum_k = k1
@@ -160,29 +172,31 @@ class Model:
                             "grid": maximum_grid,
                             "k": maximum_k}
                     json.dump(data, f)
+
             print()
-            print(result['train_acc'][-1], result['test_acc'][-1])
-            print(f"hidden_layer={maximum_layer}, grid={maximum_grid}, k={maximum_k}, " +
-                  f"maxi_test_acc={maxi}")
+            print(result['train_accuracy'][-1], result['test_accuracy'][-1])
+            print(f"hidden_layer={maximum_layer}, grid={maximum_grid}, " +
+                  f"k={maximum_k}, maxi_test_acc={maxi}")
             print(f"hidden_layer={hidden_layer1}, grid={grid1}, " +
                   f"k={k1}, test_loss={result['test_loss'][0]}")
+
             hidden_layer1 = self.random.choice(list(range(5, 101)))
             grid1 = self.random.choice(list(range(5, 51)))
             k1 = self.random.choice(list(range(3, 26)))
 
 
     @staticmethod
-    def loss_func(x, y):
+    def loss_function(x, y):
         return torch.abs(torch.mean(x) - torch.mean(y))
 
-    def train_acc(self):
+    def train_accuracy(self):
         return torch.mean(
             torch.abs(
              self.model(self.dataset['train_input'])[:, 0] -
              self.dataset['train_label'][:, 0]
             ))
 
-    def test_acc(self):
+    def test_accuracy(self):
         return torch.mean(
             torch.abs(
                 self.model(self.dataset['test_input'])[:, 0] -
@@ -222,7 +236,7 @@ class Model:
         train_input = [int(state.turn)] + train_input
         return train_input[:self.len_input // 2]
 
-    def get_data(self, fen_generator, get_score, _limit):
+    def get_data(self, fen_generator, get_score, count_limit):
         count = 0
         count2 = 0
         dataset = {}
@@ -231,7 +245,7 @@ class Model:
         test_inputs = []
         test_labels = []
         board = chess.Board()
-        for fen in fen_generator(get_score, _limit):
+        for fen in fen_generator(get_score, count_limit):
             scores = []
             boards = []
             try:
@@ -264,22 +278,31 @@ class Model:
                 utils_progress(
                     f"{str(count).rjust(5, ' ')} | " +
                     f"{str(count2).rjust(5, ' ')} | " +
-                    f"{str(scores[-1]).rjust(2, ' ')} | {board.fen()}")
+                    f"{str(scores[-1]).rjust(2, ' ')} " +
+                    f"| {board.fen()}")
                 board.pop()
             if count % 2 == 0:
                 for i in range(1, len(boards)):
-                    test_input = self.get_train(state1=boards[0], state2=boards[i])
+                    test_input = self.get_train(
+                        state1=boards[0], state2=boards[i]
+                    )
                     test_inputs.append(test_input)
                     test_labels.append([scores[i] - scores[0]])
-                    test_input = self.get_train(state1=boards[i], state2=boards[0])
+                    test_input = self.get_train(
+                        state1=boards[i], state2=boards[0]
+                    )
                     test_inputs.append(test_input)
                     test_labels.append([scores[0] - scores[i]])
             else:
                 for i in range(1, len(boards)):
-                    train_input = self.get_train(state1=boards[0], state2=boards[i])
+                    train_input = self.get_train(
+                        state1=boards[0], state2=boards[i]
+                    )
                     train_inputs.append(train_input)
                     train_labels.append([scores[i] - scores[0]])
-                    train_input = self.get_train(state1=boards[i], state2=boards[0])
+                    train_input = self.get_train(
+                        state1=boards[i], state2=boards[0]
+                    )
                     train_inputs.append(train_input)
                     train_labels.append([scores[0] - scores[i]])
         print()
@@ -302,11 +325,15 @@ class Model:
 
 
     def get_wdl(self, fen_position):
-        with chess.syzygy.open_tablebase(self.syzygy["wdl345"]) as tablebase:
+        with chess.syzygy.open_tablebase(
+                self.syzygy_endgame["wdl345"]
+        ) as tablebase:
             board = chess.Board(fen_position)
             result = tablebase.get_wdl(board)
         if result is None:
-            with chess.syzygy.open_tablebase(self.syzygy["wdl6"]) as tablebase:
+            with chess.syzygy.open_tablebase(
+                    self.syzygy_endgame["wdl6"]
+            ) as tablebase:
                 board = chess.Board(fen_position)
                 result = tablebase.get_wdl(board)
         return result
@@ -334,11 +361,11 @@ class Model:
             return score
 
 
-    def get_fen(self, get_score, _limit):
+    def get_fen_epd(self, get_score, count_limit):
         with open(self.epdeval, mode="r") as f:
             dataevals = f.readlines()
         fens = []
-        for _ in range(_limit):
+        for _ in range(count_limit):
             for _ in range(4):
                 dataeval = str(self.random.choice(dataevals)).strip()
                 spl = dataeval.split(" ")
@@ -347,12 +374,12 @@ class Model:
         return fens
 
 
-    def fen_random_generator(self, get_score, _limit):
+    def get_fen_random(self, get_score, count_limit):
         board = chess.Board()
         count = 0
         endgames = []
         pieces = ['P', 'p', 'N', 'n', 'B', 'b', 'R', 'r', 'Q', 'q']
-        for _ in range(_limit):
+        for _ in range(count_limit):
             board.clear()
             for king in ['K', 'k']:
                 board = self.set_piece(state=board, piece=king)
@@ -390,21 +417,23 @@ class Model:
                     if get_score(fen_positions) is not None:
                         count += 1
                         endgames.append(fen_positions)
-            utils_progress(f"{count}/{limit} | {fen_positions}")
+            utils_progress(f"{count}/{count_limit} | {fen_positions}")
         return endgames
 
     def test_model(self):
         print("self.test_model() starting...")
         # self.dataset = self.get_data(
-        #     fen_generator=self.fen_random_generator,
+        #     fen_generator=self.get_fen_random,
         #     get_score=self.get_wdl,
-        #     _limit=4
+        #     count_limit=4
         # )
         print(self.formula)
 
     def make_predict(self):
         print("self.make_predict() starting...")
-        fens = list(self.get_fen(get_score=self.get_score, _limit=1))
+        fens = list(self.get_fen_epd(
+            get_score=self.get_score, count_limit=1
+        ))
         board1 = chess.Board()
         board1.set_fen(fens[0])
         board2 = chess.Board()

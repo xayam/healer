@@ -23,7 +23,7 @@ def key_limit(width=32) -> int:
     while True:
         old_limit = limit
         limit = 4 * math.ceil(math.log2(limit)) + 2
-        # print(limit)
+        # print(count_limit)
         if limit == old_limit:
             break
         utils_beep(limit)

@@ -14,7 +14,7 @@ def cube_put(key, value) -> bool:
 
 def cube_indexes(width) -> Tuple[list, list]:
     buffer = []
-    # limit = key_limit(name)
+    # count_limit = key_limit(name)
     # sys.exit()
     for name in list(range(1, width)):
         paths = paths_paths(width=name, verbose=0)
