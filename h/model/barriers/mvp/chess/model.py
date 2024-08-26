@@ -45,14 +45,14 @@ class Model:
 
     def start(self):
         print("Available commands:")
-        print("          1. Search params")
-        print("          2. Fine-Tune model")
-        print("          3. Test model")
-        print("          4. Make predict")
-        # try:
-        command = int(input("Choice command [default 1]: "))
-        # except:
-        #     command = 1
+        print("   1. Search params")
+        print("   2. Fine-Tune model")
+        print("   3. Test model")
+        print("   4. Make predict")
+        try:
+            command = int(input("Choice command [default 1]: "))
+        except ValueError:
+            command = 1
         if command not in [1, 2, 3, 4]:
             command = 1
         if command == 1:
