@@ -56,7 +56,6 @@ class Model:
 
     def train(self):
         print("self.train() starting...")
-        results = []
         while True:
             self.dataset = self.get_data(
                 fen_generator=self.get_fen,
@@ -64,14 +63,11 @@ class Model:
                 _limit=48//4
             )
             result = self.model.fit(self.dataset,
+                                    loss_fn=self.loss_fn,
                                     metrics=(self.train_acc, self.test_acc),
-                                    steps=2)
+                                    steps=20)
             print(result['train_acc'][-1], result['test_acc'][-1])
-            results.append([
-                result['test_loss'][0]
-            ])
-            # results = sorted(results, key=lambda xx: xx[-1], reverse=True)
-            utils_progress(f"result['test_loss'][0]={results[-1][-1]}")
+            utils_progress(f"result['test_loss'][0]={result['test_loss'][0]}")
             self.save()
 
 
@@ -82,16 +78,15 @@ class Model:
             get_score=self.get_score,
             _limit=48 // 4
         )
-        results = []
         maxi = 10 ** 10
         maximum_layer = 10 ** 10
         maximum_grid = 10 ** 10
         maximum_k = 10 ** 10
         rnd = random.SystemRandom(0)
         while True:
-            hidden_layer1 = rnd.choice(list(range(91, 92)))
-            grid1 = rnd.choice(list(range(40, 41)))
-            k1 = rnd.choice(list(range(3, 4)))
+            hidden_layer1 = rnd.choice(list(range(5, 101)))
+            grid1 = rnd.choice(list(range(5, 51)))
+            k1 = rnd.choice(list(range(3, 26)))
             self.model = KAN(
                 width=[self.len_input, hidden_layer1, 1],
                 grid=grid1, k=k1, auto_save=False, seed=0)
@@ -100,10 +95,6 @@ class Model:
                                     loss_fn=self.loss_fn,
                                     metrics=(self.train_acc, self.test_acc),
                                     steps=2)
-            # print(result['test_loss'])
-            results.append([hidden_layer1, grid1, k1,
-                            result['test_loss'][0]
-                            ])
             if result['test_acc'][-1] < maxi:
                 maxi = result['test_acc'][-1]
                 maximum_layer = hidden_layer1
@@ -112,11 +103,9 @@ class Model:
             print()
             print(result['train_acc'][-1], result['test_acc'][-1])
             print(f"hidden_layer={maximum_layer}, grid={maximum_grid}, k={maximum_k}, " +
-                  f"{maxi}"
-                  )
-            print(f"hidden_layer={hidden_layer1}, grid={grid1}, k={k1}, {results[-1][-1]}")
-            self.save()
-            break
+                  f"maxi_test_acc{maxi}")
+            print(f"hidden_layer={hidden_layer1}, grid={grid1}, " +
+                  f"k={k1}, test_loss={result['test_loss'][0]}")
 
 
     def loss_fn(self, x, y):
