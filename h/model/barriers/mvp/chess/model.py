@@ -10,7 +10,6 @@ from h.model.utils import utils_progress
 
 
 class Model:
-    COUNT_FEN_LIMIT = 5000
 
     def __init__(self):
         self.model = None
