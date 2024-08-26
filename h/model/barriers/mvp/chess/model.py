@@ -1,3 +1,4 @@
+import json
 import os.path
 
 from kan import *
@@ -15,24 +16,38 @@ class Model:
         self.model = None
         self.dataset = None
         self.last_fen = None
+        self.state_model = None
+        self.file_formula = None
+        self.model_json = None
+        self.model_option = None
+        self.lib = None
+        self.len_input = None
+        self.limit = None
+        self.device = None
+        self.dtype = None
+        self.formula = None
+
+        self.init()
+
+    def init(self):
         self.state_model = "model.pth"
         self.file_formula = "model_formula_0.txt"
+        self.model_json = "model.json"
         self.lib = ['x^2', 'x^3', 'x^4', 'exp',
                     'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs'
                     ]
-        self.len_input = 772
+        self.len_input = 64 * 12 + 4
+        self.limit = 48 // 4
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.dtype = torch.get_default_dtype()
         print(self.device, self.dtype)
-
         self.formula = self.load()
-
 
     def start(self):
         self.search_params()
         # self.train()
         # self.test_model()
-        # self.predict()
+        # self.make_predict()
 
     def save(self):
         # torch.save(self.model.state_dict(), self.state_model)
@@ -43,9 +58,18 @@ class Model:
         torch.save(self.model.state_dict(), self.state_model)
 
     def load(self):
+        self.model_option = {
+            "hidden_layer": 91,
+            "grid": 40,
+            "k": 3
+        }
+        if os.path.exists(self.model_json):
+            with open(self.model_json, "r") as f:
+                self.model_option = json.load(f)
         self.model = KAN(
-            width=[self.len_input, 91, 1],
-            grid=40, k=3, auto_save=False, seed=0)
+            width=[self.len_input, self.model_option["hidden_layer"], 1],
+            grid=self.model_option["grid"],
+            k=self.model_option["k"], auto_save=False, seed=0)
         if os.path.exists(self.state_model):
             self.model.load_state_dict(torch.load(self.state_model))
         if not os.path.exists(self.file_formula):
@@ -60,10 +84,10 @@ class Model:
             self.dataset = self.get_data(
                 fen_generator=self.get_fen,
                 get_score=self.get_score,
-                _limit=48//4
+                _limit=self.limit
             )
             result = self.model.fit(self.dataset,
-                                    loss_fn=self.loss_fn,
+                                    loss_fn=self.loss_func,
                                     metrics=(self.train_acc, self.test_acc),
                                     steps=20)
             print(result['train_acc'][-1], result['test_acc'][-1])
@@ -76,23 +100,23 @@ class Model:
         self.dataset = self.get_data(
             fen_generator=self.get_fen,
             get_score=self.get_score,
-            _limit=48 // 4
+            _limit=self.limit
         )
+        hidden_layer1 = self.model_option["hidden_layer"]
+        grid1 = self.model_option["grid"]
+        k1 = self.model_option["k"]
         maxi = 10 ** 10
         maximum_layer = 10 ** 10
         maximum_grid = 10 ** 10
         maximum_k = 10 ** 10
         rnd = random.SystemRandom(0)
         while True:
-            hidden_layer1 = rnd.choice(list(range(5, 101)))
-            grid1 = rnd.choice(list(range(5, 51)))
-            k1 = rnd.choice(list(range(3, 26)))
             self.model = KAN(
                 width=[self.len_input, hidden_layer1, 1],
                 grid=grid1, k=k1, auto_save=False, seed=0)
             self.model.load_state_dict(torch.load(self.state_model))
             result = self.model.fit(self.dataset,
-                                    loss_fn=self.loss_fn,
+                                    loss_fn=self.loss_func,
                                     metrics=(self.train_acc, self.test_acc),
                                     steps=2)
             if result['test_acc'][-1] < maxi:
@@ -100,15 +124,24 @@ class Model:
                 maximum_layer = hidden_layer1
                 maximum_grid = grid1
                 maximum_k = k1
+                with open(self.model_json, "w") as f:
+                    data = {"hidden_layer": maximum_layer,
+                            "grid": maximum_grid,
+                            "k": maximum_k}
+                    json.dump(data, f)
             print()
             print(result['train_acc'][-1], result['test_acc'][-1])
             print(f"hidden_layer={maximum_layer}, grid={maximum_grid}, k={maximum_k}, " +
                   f"maxi_test_acc{maxi}")
             print(f"hidden_layer={hidden_layer1}, grid={grid1}, " +
                   f"k={k1}, test_loss={result['test_loss'][0]}")
+            hidden_layer1 = rnd.choice(list(range(5, 101)))
+            grid1 = rnd.choice(list(range(5, 51)))
+            k1 = rnd.choice(list(range(3, 26)))
 
 
-    def loss_fn(self, x, y):
+    @staticmethod
+    def loss_func(x, y):
         return torch.abs(torch.mean(x) - torch.mean(y))
 
     def train_acc(self):
@@ -271,8 +304,8 @@ class Model:
             #     score = result['score'].black().score()
             return score
 
-
-    def get_fen(self, get_score, _limit):
+    @staticmethod
+    def get_fen(get_score, _limit):
         with open("dataset.epdeval", mode="r") as f:
             dataevals = f.readlines()
         fens = []
@@ -337,12 +370,12 @@ class Model:
         # self.dataset = self.get_data(
         #     fen_generator=self.fen_random_generator,
         #     get_score=self.get_wdl,
-        #     limit=4
+        #     _limit=4
         # )
         print(self.formula)
 
-    def predict(self):
-        print("self.predict() starting...")
+    def make_predict(self):
+        print("self.make_predict() starting...")
         fens = list(self.get_fen(get_score=self.get_score, _limit=1))
         board1 = chess.Board()
         board1.set_fen(fens[0])
