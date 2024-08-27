@@ -17,13 +17,13 @@ from h.model.utils import utils_progress, utils_print
 class Model:
 
     def __init__(self):
-        self.stop = None
         self.job = None
         self.params = None
         self.listener = None
         self.process = None
         self.thread = None
         self.commands = None
+        self.stop = None
         self.random = None
         self.model = None
         self.dataset = None
