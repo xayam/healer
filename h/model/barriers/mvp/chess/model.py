@@ -37,10 +37,12 @@ class Model:
 
     def model_init(self):
         self.commands = {
+            0: {"call": None, "desc": "Exit"},
             1: {"call": self.model_params, "desc": "Search hyperparameters"},
             2: {"call": self.model_finetune, "desc": "Fine-Tune model"},
-            3: {"call": self.model_test, "desc": "Test model"},
-            4: {"call": self.make_predict, "desc": "Make predict"},
+            3: {"call": self.save_formula, "desc": "Save formula"},
+            4: {"call": self.model_test, "desc": "Test model"},
+            5: {"call": self.make_predict, "desc": "Make predict"},
         }
         self.random = random.SystemRandom(0)
         self.model_option = {
@@ -76,20 +78,24 @@ class Model:
         self.formula = self.model_load()
 
     def start(self):
-        print("Available commands:")
-        for key, value in self.commands.items():
-            print(f"   {key}. {value['desc']}")
-        try:
-            command = int(input("Input command [default 1]: "))
-        except ValueError:
-            command = 1
-        if command not in self.commands.keys():
-            command = 1
+        while True:
+            print("Available commands:")
+            for key, value in self.commands.items():
+                print(f"   {key}. {value['desc']}")
+            try:
+                command = int(input("Input command [default 0]: "))
+            except ValueError:
+                command = 0
+            if command not in self.commands.keys():
+                command = 0
+            if command == 0:
+                break
+            self.commands[command]["call"]()
 
-        self.commands[command]["call"]()
-
-    def model_save(self):
+    def save_model(self):
         torch.save(self.model.state_dict(), self.file_model)
+
+    def save_formula(self):
         self.model.auto_symbolic(lib=self.lib_formula)
         formula = self.model.symbolic_formula()[0][0]
         with open(self.file_formula, encoding="UTF-8", mode="w") as p:
@@ -131,8 +137,8 @@ class Model:
                 )
             )
             print(result['train_accuracy'][-1], result['test_accuracy'][-1])
-            utils_progress(f"result['test_loss'][0]={result['test_loss'][0]}")
-            self.model_save()
+            print(f"result['test_loss'][0]={result['test_loss'][0]}")
+            self.save_model()
 
 
     def model_params(self):
@@ -174,7 +180,6 @@ class Model:
                             "k": maximum_k}
                     json.dump(data, f)
 
-            print()
             print(result['train_accuracy'][-1], result['test_accuracy'][-1])
             print(f"hidden_layer={maximum_layer}, grid={maximum_grid}, " +
                   f"k={maximum_k}, maxi_test_acc={maxi}")
