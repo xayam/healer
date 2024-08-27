@@ -97,16 +97,16 @@ class Model:
 
     def model_load(self):
         print("Loading model...")
-        if os.path.exists(self.model_json):
-            with open(self.model_json, "r") as f:
-                self.model_option = json.load(f)
-        else:
-            with open(self.model_json, "w") as f:
-                json.dump(self.model_option, f)
+        # if os.path.exists(self.model_json):
+        #     with open(self.model_json, "r") as f:
+        #         self.model_option = json.load(f)
+        # else:
+        #     with open(self.model_json, "w") as f:
+        #         json.dump(self.model_option, f)
         self.model = KAN(
-            width=[self.len_input, self.model_option["hidden_layer"], 1],
-            grid=self.model_option["grid"],
-            k=self.model_option["k"], auto_save=False, seed=0)
+            width=[self.len_input, 13, 8, 4, 2, 1, 1],
+            grid=5, k=3, auto_save=False, seed=0
+        )
         if os.path.exists(self.file_model):
             self.model.load_state_dict(torch.load(self.file_model))
         if not os.path.exists(self.file_formula):
