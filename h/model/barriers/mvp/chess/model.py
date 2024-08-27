@@ -98,15 +98,16 @@ class Model:
             except ValueError:
                 command = 0
             if command not in self.commands.keys():
-                command = 0
+                print("Error: Command not found.")
+                continue
             if command == 0:
                 break
             self.job = self.commands[command]["call"]
             self.params = {}
             self.job()
         # self.process = Process(target=self.executor)
-        self.listener = keyboard.Listener(on_release=self.key_release)
-        self.listener.start()
+        # self.listener = keyboard.Listener(on_release=self.key_release)
+        # self.listener.start()
         # self.process.start()
 
     def key_release(self, key):
@@ -116,10 +117,10 @@ class Model:
             return False
 
     def executor(self):
-        with pool.ThreadPoolExecutor(max_workers=1) as e:
-            print("123")
-            e.submit(self.job, **self.params)
-            e.shutdown()
+        if self.job is not None and self.params is not None:
+            with pool.ThreadPoolExecutor(max_workers=1) as execute:
+                execute.submit(self.job, **self.params)
+                execute.shutdown()
 
     def save_model(self):
         torch.save(self.model.state_dict(), self.file_model)
