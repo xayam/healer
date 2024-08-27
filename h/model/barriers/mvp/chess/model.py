@@ -1,18 +1,28 @@
 import json
 import os.path
-
+from multiprocessing import Process
+from time import sleep
+import concurrent.futures as pool
+# import keyboard
+from pynput import keyboard
 import chess
 import chess.engine
 import chess.syzygy
 
 from kan import *
 
-from h.model.utils import utils_progress
+from h.model.utils import utils_progress, utils_print
 
 
 class Model:
 
     def __init__(self):
+        self.stop = None
+        self.job = None
+        self.params = None
+        self.listener = None
+        self.process = None
+        self.thread = None
         self.commands = None
         self.random = None
         self.model = None
@@ -44,6 +54,7 @@ class Model:
             4: {"call": self.model_test, "desc": "Test model"},
             5: {"call": self.make_predict, "desc": "Make predict"},
         }
+        self.stop = False
         self.random = random.SystemRandom(0)
         self.model_option = {
             "hidden_layer": 91,
@@ -90,7 +101,25 @@ class Model:
                 command = 0
             if command == 0:
                 break
-            self.commands[command]["call"]()
+            self.job = self.commands[command]["call"]
+            self.params = {}
+            self.job()
+        # self.process = Process(target=self.executor)
+        self.listener = keyboard.Listener(on_release=self.key_release)
+        self.listener.start()
+        # self.process.start()
+
+    def key_release(self, key):
+        if key == keyboard.Key.esc:
+            print(key)
+            self.stop = True
+            return False
+
+    def executor(self):
+        with pool.ThreadPoolExecutor(max_workers=1) as e:
+            print("123")
+            e.submit(self.job, **self.params)
+            e.shutdown()
 
     def save_model(self):
         torch.save(self.model.state_dict(), self.file_model)
@@ -122,7 +151,7 @@ class Model:
                 return str(p.read()).strip()
 
     def model_finetune(self):
-        print("self.model_finetune() starting...")
+        utils_print("self.model_finetune() starting...")
         while True:
             self.dataset = self.get_data(
                 fen_generator=self.get_fen_epd,
@@ -136,10 +165,9 @@ class Model:
                     self.test_accuracy
                 )
             )
-            print(result['train_accuracy'][-1], result['test_accuracy'][-1])
-            print(f"result['test_loss'][0]={result['test_loss'][0]}")
-            self.save_model()
-
+            utils_print(result['train_accuracy'][-1], result['test_accuracy'][-1])
+            utils_print(f"result['test_loss'][0]={result['test_loss'][0]}")
+            model.save_model()
 
     def model_params(self):
         print("self.model_params() starting...")
@@ -185,11 +213,12 @@ class Model:
                   f"k={maximum_k}, maxi_test_acc={maxi}")
             print(f"hidden_layer={hidden_layer1}, grid={grid1}, " +
                   f"k={k1}, test_loss={result['test_loss'][0]}")
-
+            # if self.stop:
+            #     self.save_model()
+            #     break
             hidden_layer1 = self.random.choice(list(range(5, 101)))
             grid1 = self.random.choice(list(range(5, 51)))
             k1 = self.random.choice(list(range(3, 26)))
-
 
     @staticmethod
     def loss_function(x, y):
@@ -198,8 +227,8 @@ class Model:
     def train_accuracy(self):
         return torch.mean(
             torch.abs(
-             self.model(self.dataset['train_input'])[:, 0] -
-             self.dataset['train_label'][:, 0]
+                self.model(self.dataset['train_input'])[:, 0] -
+                self.dataset['train_label'][:, 0]
             ))
 
     def test_accuracy(self):
@@ -329,7 +358,6 @@ class Model:
             torch.FloatTensor(test_labels).type(self.dtype).to(self.device)
         return dataset
 
-
     def get_wdl(self, fen_position):
         with chess.syzygy.open_tablebase(
                 self.syzygy_endgame["wdl345"]
@@ -344,7 +372,6 @@ class Model:
                 result = tablebase.get_wdl(board)
         return result
 
-
     def set_piece(self, state, piece):
         while True:
             pos = self.random.choice(list(range(64)))
@@ -356,7 +383,6 @@ class Model:
             break
         return state
 
-
     def get_score(self, state, depth=10):
         with chess.engine.SimpleEngine.popen_uci(self.engine_stockfish) as sf:
             result = sf.analyse(state, chess.engine.Limit(depth=depth))
@@ -365,7 +391,6 @@ class Model:
             # else:
             #     score = result['score'].black().score()
             return score
-
 
     def get_fen_epd(self, get_score, count_limit):
         with open(self.epd_eval, mode="r") as f:
@@ -377,7 +402,6 @@ class Model:
             fen = " ".join(spl[:-1])
             fens.append(fen)
         return fens
-
 
     def get_fen_random(self, get_score, count_limit):
         board = chess.Board()

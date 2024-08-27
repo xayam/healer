@@ -18,7 +18,7 @@ class UCI:
 
     def stop(self) -> None:
         pass
-        # self.search.stop = True
+        # self.search.STOP = True
         # if self.thread is not None:
         #     try:
         #         self.thread.join()
@@ -27,7 +27,7 @@ class UCI:
 
     def quit(self) -> None:
         pass
-        # self.search.stop = True
+        # self.search.STOP = True
         # if self.thread is not None:
         #     try:
         #         self.thread.join()
@@ -57,7 +57,7 @@ class UCI:
         splitted = inp.split(" ")
         if splitted[0] == "quit":
             self.quit()
-        elif splitted[0] == "stop":
+        elif splitted[0] == "STOP":
             self.stop()
             self.search.reset()
         elif splitted[0] == "ucinewgame":

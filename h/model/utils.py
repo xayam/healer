@@ -9,6 +9,12 @@ def utils_progress(message: str) -> None:
     sys.stdout.flush()
 
 
+def utils_print(*args, separator=" ") -> None:
+    sys.stdout.write(separator.join(map(str, args)))
+    sys.stdout.write("\n")
+    sys.stdout.flush()
+
+
 def utils_colorize_bool(data: bool) -> str:
     message = colorama.Fore.BLACK
     if data:
