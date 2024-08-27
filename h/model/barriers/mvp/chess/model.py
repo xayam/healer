@@ -1,5 +1,6 @@
 import json
 import os.path
+import sys
 from multiprocessing import Process
 from time import sleep
 import concurrent.futures as pool
@@ -12,6 +13,7 @@ import chess.syzygy
 from kan import *
 
 from h.model.utils import utils_progress, utils_print
+from model.barriers.mvp.chess import regmet
 
 
 class Model:
@@ -126,10 +128,8 @@ class Model:
         torch.save(self.model.state_dict(), self.file_model)
 
     def save_formula(self):
-        self.model.auto_symbolic(lib=self.lib_formula)
-        formula = self.model.symbolic_formula()[0][0]
-        with open(self.file_formula, encoding="UTF-8", mode="w") as p:
-            p.write(str(formula).strip())
+        utils_print("self.model_finetune() starting...")
+        self.model_finetune(save_formula=True)
 
     def model_load(self):
         print("Loading model...")
@@ -151,7 +151,7 @@ class Model:
             with open(self.file_formula, encoding="UTF-8", mode="r") as p:
                 return str(p.read()).strip()
 
-    def model_finetune(self):
+    def model_finetune(self, save_formula=False):
         utils_print("self.model_finetune() starting...")
         while True:
             self.dataset = self.get_data(
@@ -169,6 +169,12 @@ class Model:
             utils_print(result['train_accuracy'][-1], result['test_accuracy'][-1])
             utils_print(f"result['test_loss'][0]={result['test_loss'][0]}")
             model.save_model()
+            if save_formula:
+                self.model.auto_symbolic(lib=self.lib_formula)
+                formula = self.model.symbolic_formula()[0][0]
+                with open(self.file_formula, encoding="UTF-8", mode="w") as p:
+                    p.write(str(formula).strip())
+                break
 
     def model_params(self):
         print("self.model_params() starting...")
@@ -229,15 +235,19 @@ class Model:
         return torch.abs(
             torch.mean(
                 self.model(self.dataset['train_input'])[:, 0]
-            ) - self.dataset['train_label'][:, 0]
-            )
+            ) -
+            torch.mean(self.dataset['train_label'][:, 0]
+                       )
+        )
 
     def test_accuracy(self):
         return torch.abs(
             torch.mean(
                 self.model(self.dataset['test_input'])[:, 0]
-            ) - self.dataset['test_label'][:, 0]
-            )
+            ) -
+            torch.mean(self.dataset['test_label'][:, 0]
+                       )
+        )
 
     def get_train(self, state1, state2):
         return self.get_input(state1) + self.get_input(state2)
@@ -452,12 +462,29 @@ class Model:
 
     def model_test(self):
         print("self.model_test() starting...")
-        # self.dataset = self.get_data(
-        #     fen_generator=self.get_fen_random,
-        #     get_score=self.get_wdl,
-        #     count_limit=4
-        # )
-        print(self.formula)
+        self.dataset = self.get_data(
+            fen_generator=self.get_fen_random,
+            get_score=self.get_wdl,
+            count_limit=4
+        )
+        y_true = self.dataset["test_label"]
+        vars = []
+        for data in self.dataset["test_label"]:
+            vars.append({
+                f"x_{i}": data[i - 1]
+                for i in range(self.len_input, 0, -1)
+            })
+        y_pred = []
+        for data in vars:
+            formula = ""
+            for _var, _val in data.items():
+                formula = str(self.formula).replace(_var, str(_val))
+            y_pred.append(eval(formula))
+
+        regmet.RegressionMetrics(y_true, y_pred)
+
+    def predict(self):
+        pass
 
     def make_predict(self):
         print("self.make_predict() starting...")
