@@ -223,21 +223,21 @@ class Model:
 
     @staticmethod
     def loss_function(x, y):
-        return torch.abs(torch.mean(torch.abs(x)) - torch.mean(torch.abs(y)))
+        return torch.abs(torch.mean(x) - torch.mean(y))
 
     def train_accuracy(self):
-        return torch.mean(
-            torch.abs(
-                self.model(self.dataset['train_input'])[:, 0] -
-                self.dataset['train_label'][:, 0]
-            ))
+        return torch.abs(
+            torch.mean(
+                self.model(self.dataset['train_input'])[:, 0]
+            ) - self.dataset['train_label'][:, 0]
+            )
 
     def test_accuracy(self):
-        return torch.mean(
-            torch.abs(
-                self.model(self.dataset['test_input'])[:, 0] -
-                self.dataset['test_label'][:, 0]
-            ))
+        return torch.abs(
+            torch.mean(
+                self.model(self.dataset['test_input'])[:, 0]
+            ) - self.dataset['test_label'][:, 0]
+            )
 
     def get_train(self, state1, state2):
         return self.get_input(state1) + self.get_input(state2)
