@@ -15,7 +15,7 @@ def utils_print(*args, separator=" ") -> None:
     sys.stdout.flush()
 
 
-def utils_colorize_bool(data: bool) -> str:
+def utils_colorize_bool(data) -> str:
     message = colorama.Fore.BLACK
     if data:
         message += colorama.Back.GREEN + f"{data} "

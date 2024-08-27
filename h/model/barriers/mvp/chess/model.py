@@ -98,7 +98,7 @@ class Model:
             except ValueError:
                 command = 0
             if command not in self.commands.keys():
-                print("Error: Command not found.")
+                print("Error: Command not found")
                 continue
             if command == 0:
                 break
@@ -223,7 +223,7 @@ class Model:
 
     @staticmethod
     def loss_function(x, y):
-        return torch.abs(torch.mean(x) - torch.mean(y))
+        return torch.abs(torch.mean(torch.abs(x)) - torch.mean(torch.abs(y)))
 
     def train_accuracy(self):
         return torch.mean(
@@ -312,9 +312,9 @@ class Model:
                 boards.append(board.copy())
                 count2 += 1
                 utils_progress(
-                    f"{str(count).rjust(5, ' ')} | " +
-                    f"{str(count2).rjust(5, ' ')} | " +
-                    f"{str(scores[-1]).rjust(2, ' ')} " +
+                    f"{str(count).rjust(4, ' ')} | " +
+                    f"{str(count2).rjust(4, ' ')} | " +
+                    f"{str(scores[-1]).rjust(5, ' ')} " +
                     f"| {board.fen()}")
                 board.pop()
             if count % 2 == 0:
