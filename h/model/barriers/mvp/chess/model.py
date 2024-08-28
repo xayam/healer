@@ -140,9 +140,9 @@ class Model:
             with open(self.model_json, "w") as f:
                 json.dump(self.model_option, f)
         self.model = KAN(
-            width=[self.len_input, int(self.model_json["hidden_layer"])],
-            grid=int(self.model_json["grid"]),
-            k=int(self.model_json["k"]), auto_save=False, seed=0
+            width=[self.len_input, self.model_option["hidden_layer"], 1],
+            grid=self.model_option["grid"],
+            k=self.model_option["k"], auto_save=False, seed=0
         )
         if os.path.exists(self.file_model):
             self.model.load_state_dict(torch.load(self.file_model))
