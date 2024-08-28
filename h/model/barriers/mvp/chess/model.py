@@ -496,7 +496,7 @@ class Model:
             for key, value in data.items():
                 formula = str(formula).replace(key, str(value))
             y_pred.append(eval(formula))
-        # print(eval(formula))
+        print(y_pred)
 
         regmet.RegressionMetrics(y_true, y_pred)
 
