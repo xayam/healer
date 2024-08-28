@@ -1,0 +1,7 @@
+# robots for
+User-agent: *
+Sitemap: http://healers.moscow/sitemap.xml
+Allow: /
+Allow: /index.html
+Crawl-delay: 1
+Host: healers.moscow
