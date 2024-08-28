@@ -48,6 +48,15 @@ class Model:
         self.model_config()
 
     def model_config(self):
+        # Set this
+        self.engine_stockfish = \
+            'D:/Work2/PyCharm/SmartEval2/github/src/poler/poler/bin' + \
+            '/stockfish-windows-x86-64-avx2.exe'
+        self.syzygy_endgame = {
+            "wdl345": "E:/Chess/syzygy/3-4-5-wdl",
+            "wdl6": "E:/Chess/syzygy/6-wdl",
+        }
+
         self.commands = {
             0: {"call": None, "desc": "Exit"},
             1: {"call": self.model_params, "desc": "Search hyperparameters"},
@@ -71,13 +80,6 @@ class Model:
             'x', 'x^2', 'x^3', 'x^4', 'exp',
             'log', 'sqrt', 'tanh', 'sin', 'tan', 'abs',
         ]
-        self.engine_stockfish = \
-            'D:/Work2/PyCharm/SmartEval2/github/src/poler/poler/bin' + \
-            '/stockfish-windows-x86-64-avx2.exe'
-        self.syzygy_endgame = {
-            "wdl345": "E:/Chess/syzygy/3-4-5-wdl",
-            "wdl6": "E:/Chess/syzygy/6-wdl",
-        }
         self.epd_eval = "dataset.epdeval"
         self.len_input = 64 * 12 + 4
         self.count_limit = 48
@@ -164,16 +166,18 @@ class Model:
                 count_limit=8  # self.count_limit
             )
             result = self.model.fit(
-                self.dataset, loss_fn=self.loss_function, steps=2,
-                metrics=(
-                    self.train_accuracy,
-                    self.test_accuracy
-                )
+                self.dataset,
+                # loss_fn=self.loss_function,
+                steps=2,
+                # metrics=(
+                #     self.train_accuracy,
+                #     self.test_accuracy
+                # )
             )
             utils_print(
                 count,
-                result['train_accuracy'][-1],
-                result['test_accuracy'][-1]
+                # result['train_accuracy'][-1],
+                # result['test_accuracy'][-1]
             )
             utils_print(f"result['train_loss']={result['train_loss']}")
             utils_print(f"result['test_loss']={result['test_loss']}")
