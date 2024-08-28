@@ -1,10 +1,10 @@
 import json
 import os.path
-import sys
-from multiprocessing import Process
-from time import sleep
-import concurrent.futures as pool
+# import sys
+# from multiprocessing import Process
+# from time import sleep
 # import keyboard
+import concurrent.futures as pool
 from pynput import keyboard
 import chess
 import chess.engine
@@ -239,9 +239,9 @@ class Model:
             k1 = self.random.choice(list(range(3, 26)))
 
     @staticmethod
-    def loss_function(x, y):
+    def loss_function(xx, yy):
         return torch.abs(
-                torch.mean(x) - torch.mean(y)
+                torch.mean(xx) - torch.mean(yy)
         )
 
     def train_accuracy(self):
