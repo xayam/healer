@@ -8,8 +8,8 @@ import cProfile
 from typing import Tuple
 
 import chess
-from mcnode import MCTSNode
-from model.barriers.mvp.chess.helpers import ITERATIONS
+from h.model.barriers.mvp.chess.mcnode import MCTSNode
+from h.model.barriers.mvp.chess.helpers import ITERATIONS
 
 
 class MCTS:

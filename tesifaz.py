@@ -1,4 +1,4 @@
-from h.model.barriers.mvp.chess.tesifaz import main
+from h.model.barriers.mvp.chess.main import main
 
 
 if __name__ == "__main__":

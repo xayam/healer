@@ -1,8 +1,8 @@
 from sys import stdout
 import chess
 
-from helpers import ITERATIONS
-from mctsearch import MCTS
+from h.model.barriers.mvp.chess.helpers import ITERATIONS
+from h.model.barriers.mvp.chess.mctsearch import MCTS
 
 
 class UCI:
@@ -35,7 +35,7 @@ class UCI:
         #         pass
 
     def uci(self) -> None:
-        self.output("id name xasifaz")
+        self.output("id name tesifaz")
         self.output("id author Aleksey Belyanin, xayam@yandex.ru")
         self.output("")
         self.output("option name Move Overhead type spin default 5 min 0 max 5000")

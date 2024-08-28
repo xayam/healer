@@ -1,9 +1,9 @@
 import math
-
 import chess
-from helpers import MAX_PLY, VALUE_INFINITE
-from limits import Limits
-from model.barriers.mvp.chess.evaluation import evaluate
+
+from h.model.barriers.mvp.chess.helpers import MAX_PLY, VALUE_INFINITE
+from h.model.barriers.mvp.chess.limits import Limits
+from h.model.barriers.mvp.chess.evaluation import evaluate
 
 
 class MCTSNode:

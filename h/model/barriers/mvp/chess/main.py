@@ -1,4 +1,4 @@
-import uci
+import h.model.barriers.mvp.chess.uci as uci
 
 
 def main() -> None:

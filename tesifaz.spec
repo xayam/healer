@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['D:\\Work2\\PyCharm\\SmartEval2\\github\\src\\healer\\healer\\h\\model\\barriers\\mvp\\chess\\tesifaz.py'],
+    ['D:\\Work2\\PyCharm\\SmartEval2\\github\\src\\healer\\healer\\tesifaz.py'],
     pathex=[],
     binaries=[],
     datas=[],

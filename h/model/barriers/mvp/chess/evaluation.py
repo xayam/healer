@@ -1,7 +1,7 @@
-from helpers import *
 import chess
 
-from model.barriers.mvp.chess.psqt import piece_values, psqt_values
+from h.model.barriers.mvp.chess.helpers import *
+from h.model.barriers.mvp.chess.psqt import piece_values, psqt_values
 
 
 def eval_m(board: chess.Board, color: chess.Color) -> int:
