@@ -13,7 +13,7 @@ import chess.syzygy
 from kan import *
 
 from h.model.utils import utils_progress, utils_print
-from model.barriers.mvp.chess import regmet
+import regmet
 
 
 class Model:
@@ -45,9 +45,9 @@ class Model:
         self.dtype = None
         self.formula = None
 
-        self.model_init()
+        self.model_config()
 
-    def model_init(self):
+    def model_config(self):
         self.commands = {
             0: {"call": None, "desc": "Exit"},
             1: {"call": self.model_params, "desc": "Search hyperparameters"},
@@ -59,12 +59,12 @@ class Model:
         self.stop = False
         self.random = random.SystemRandom(0)
         self.model_option = {
-            "hidden_layer": 91,
-            "grid": 40,
+            "hidden_layer": 13,
+            "grid": 5,
             "k": 3,
         }
         self.file_model = "model.pth"
-        self.file_formula = "model_formula_0.txt"
+        self.file_formula = "model_formula.txt"
         self.pre_model_json = "pre_model.json"
         self.model_json = "model.json"
         self.lib_formula = [
@@ -75,8 +75,8 @@ class Model:
             'D:/Work2/PyCharm/SmartEval2/github/src/poler/poler/bin' + \
             '/stockfish-windows-x86-64-avx2.exe'
         self.syzygy_endgame = {
-            "wdl345": "E:/Chess/syzygy_endgame/3-4-5-wdl",
-            "wdl6": "E:/Chess/syzygy_endgame/6-wdl",
+            "wdl345": "E:/Chess/syzygy/3-4-5-wdl",
+            "wdl6": "E:/Chess/syzygy/6-wdl",
         }
         self.epd_eval = "dataset.epdeval"
         self.len_input = 64 * 12 + 4
@@ -128,20 +128,21 @@ class Model:
         torch.save(self.model.state_dict(), self.file_model)
 
     def save_formula(self):
-        utils_print("self.model_finetune() starting...")
+        utils_print("self.save_formula() starting...")
         self.model_finetune(save_formula=True)
 
     def model_load(self):
         print("Loading model...")
-        # if os.path.exists(self.model_json):
-        #     with open(self.model_json, "r") as f:
-        #         self.model_option = json.load(f)
-        # else:
-        #     with open(self.model_json, "w") as f:
-        #         json.dump(self.model_option, f)
+        if os.path.exists(self.model_json):
+            with open(self.model_json, "r") as f:
+                self.model_option = json.load(f)
+        else:
+            with open(self.model_json, "w") as f:
+                json.dump(self.model_option, f)
         self.model = KAN(
-            width=[self.len_input, 13, 8, 4, 2, 1, 1],
-            grid=5, k=3, auto_save=False, seed=0
+            width=[self.len_input, self.model_json["hidden_layer"]],
+            grid=self.model_json["grid"],
+            k=self.model_json["k"], auto_save=False, seed=0
         )
         if os.path.exists(self.file_model):
             self.model.load_state_dict(torch.load(self.file_model))
@@ -152,28 +153,38 @@ class Model:
                 return str(p.read()).strip()
 
     def model_finetune(self, save_formula=False):
-        utils_print("self.model_finetune() starting...")
+        if not save_formula:
+            utils_print("self.model_finetune() starting...")
+        count = 0
         while True:
+            count += 1
             self.dataset = self.get_data(
                 fen_generator=self.get_fen_epd,
                 get_score=self.get_score,
                 count_limit=self.count_limit
             )
             result = self.model.fit(
-                self.dataset, loss_fn=self.loss_function, steps=5,
+                self.dataset, loss_fn=self.loss_function, steps=2,
                 metrics=(
                     self.train_accuracy,
                     self.test_accuracy
                 )
             )
-            utils_print(result['train_accuracy'][-1], result['test_accuracy'][-1])
-            utils_print(f"result['test_loss'][0]={result['test_loss'][0]}")
+            utils_print(
+                count,
+                result['train_accuracy'][-1],
+                result['test_accuracy'][-1]
+            )
+            utils_print(f"result['train_loss']={result['train_loss']}")
+            utils_print(f"result['test_loss']={result['test_loss']}")
             model.save_model()
             if save_formula:
                 self.model.auto_symbolic(lib=self.lib_formula)
                 formula = self.model.symbolic_formula()[0][0]
                 with open(self.file_formula, encoding="UTF-8", mode="w") as p:
                     p.write(str(formula).strip())
+                break
+            if count == 1:
                 break
 
     def model_params(self):
@@ -229,24 +240,30 @@ class Model:
 
     @staticmethod
     def loss_function(x, y):
-        return torch.abs(torch.mean(x) - torch.mean(y))
+        return torch.abs(
+                torch.mean(x) - torch.mean(y)
+        )
 
     def train_accuracy(self):
         return torch.abs(
             torch.mean(
                 self.model(self.dataset['train_input'])[:, 0]
-            ) -
-            torch.mean(self.dataset['train_label'][:, 0]
-                       )
+            )
+            -
+            torch.mean(
+                self.dataset['train_label'][:, 0]
+            )
         )
 
     def test_accuracy(self):
         return torch.abs(
             torch.mean(
                 self.model(self.dataset['test_input'])[:, 0]
-            ) -
-            torch.mean(self.dataset['test_label'][:, 0]
-                       )
+            )
+            -
+            torch.mean(
+                self.dataset['test_label'][:, 0]
+            )
         )
 
     def get_train(self, state1, state2):
@@ -351,14 +368,14 @@ class Model:
                     )
                     train_inputs.append(train_input)
                     train_labels.append([scores[0] - scores[i]])
-        print()
-        min_len = min(len(test_inputs), len(train_inputs),
-                      len(test_labels), len(train_labels),
-                      )
-        test_inputs = test_inputs[:min_len]
-        test_labels = test_labels[:min_len]
-        train_inputs = train_inputs[:min_len]
-        train_labels = train_labels[:min_len]
+        # print()
+        # min_len = min(len(test_inputs), len(train_inputs),
+        #               len(test_labels), len(train_labels),
+        #               )
+        # test_inputs = test_inputs[:min_len]
+        # test_labels = test_labels[:min_len]
+        # train_inputs = train_inputs[:min_len]
+        # train_labels = train_labels[:min_len]
         dataset['train_input'] = \
             torch.FloatTensor(train_inputs).type(self.dtype).to(self.device)
         dataset['train_label'] = \
@@ -463,28 +480,29 @@ class Model:
     def model_test(self):
         print("self.model_test() starting...")
         self.dataset = self.get_data(
-            fen_generator=self.get_fen_random,
-            get_score=self.get_wdl,
+            fen_generator=self.get_fen_epd,
+            get_score=self.get_score,
             count_limit=4
         )
         y_true = self.dataset["test_label"]
-        vars = []
-        for data in self.dataset["test_label"]:
-            vars.append({
-                f"x_{i}": data[i - 1]
+        # print(self.dataset["test_input"])
+        variables = []
+        for data in self.dataset["test_input"]:
+            variables.append({
+                f"x_{i}": data[i - 1].numpy().item(0)
                 for i in range(self.len_input, 0, -1)
             })
+        # print(variables)
         y_pred = []
-        for data in vars:
-            formula = ""
-            for _var, _val in data.items():
-                formula = str(self.formula).replace(_var, str(_val))
+        formula = self.formula
+        for data in variables:
+            formula = str(self.formula)
+            for key, value in data.items():
+                formula = str(formula).replace(key, str(value))
             y_pred.append(eval(formula))
+        # print(eval(formula))
 
         regmet.RegressionMetrics(y_true, y_pred)
-
-    def predict(self):
-        pass
 
     def make_predict(self):
         print("self.make_predict() starting...")
@@ -507,8 +525,8 @@ class Model:
         result = eval(formula)
         print(result)
         print(self.get_score(board2) - self.get_score(board1))
-        print(fens[0])
-        print(fens[1])
+        # print(fens[0])
+        # print(fens[1])
 
 
 if __name__ == "__main__":
