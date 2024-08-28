@@ -480,10 +480,10 @@ class Model:
             get_score=self.get_score,
             count_limit=4
         )
-        y_true = self.dataset["test_label"]
+        y_true = self.dataset["train_label"]
         # print(self.dataset["test_input"])
         variables = []
-        for data in self.dataset["test_input"]:
+        for data in self.dataset["train_input"]:
             variables.append({
                 f"x_{i}": data[i - 1].numpy().item(0)
                 for i in range(self.len_input, 0, -1)
