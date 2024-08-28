@@ -494,7 +494,7 @@ class Model:
             })
         # print(variables)
         y_pred = []
-        formula = self.formula
+        # formula = self.formula
         for data in variables:
             formula = str(self.formula)
             for key, value in data.items():

@@ -1,5 +1,3 @@
-import math
-
 import torch
 import matplotlib.pyplot as plt
 from sklearn.metrics import \
@@ -11,15 +9,13 @@ from sklearn.metrics import \
 class RegressionMetrics:
 
     def __init__(self, y_true, y_pred, multi_output='uniform_average'):
-        # self.y_true = torch.FloatTensor(y_true).type(torch.float32).to("cpu")
-        # self.y_pred = torch.FloatTensor(y_pred).type(torch.float32).to("cpu")
         self.y_true = y_true
         self.y_pred = y_pred
         self.multi_output = multi_output
         self.metrics = [
-            self.abs_delta_mean,
-            self.max_delta_mean,
-            self.min_delta_mean,
+            # self.abs_delta_mean,
+            # self.max_delta_mean,
+            # self.min_delta_mean,
             self.mean_squared_error, self.mean_absolute_error, self.r2_score,
             self.explained_variance_score, self.mean_pinball_loss,
             self.d2_pinball_score, self.d2_absolute_error_score
@@ -36,15 +32,8 @@ class RegressionMetrics:
         # plt.plot(self.abs_delta_min(), color="green")
         # plt.plot(self.abs_delta_abs(), color="gray")
         # plt.plot(self.abs_delta_max(), color="red")
-        y_pred2 = []
-        self.y_true = abs(self.y_true)
-        for i in range(len(self.y_pred)):
-            y_pred2.append(
-                1 / abs(self.y_pred[i])
-            )
-        print(y_pred2)
         plt.plot(self.y_true, color="green")
-        plt.plot(y_pred2, color="red")
+        plt.plot(self.y_pred, color="red")
         plt.show()
 
     def abs_delta_abs(self):
@@ -68,6 +57,7 @@ class RegressionMetrics:
                 torch.FloatTensor(self.y_true).type(torch.float32).to("cpu")
             ))
         )
+
     def abs_delta_min(self):
         return torch.abs(
             torch.abs(torch.min(
@@ -100,6 +90,7 @@ class RegressionMetrics:
                 torch.FloatTensor(self.y_true).type(torch.float32).to("cpu")
             )
         )
+
     def min_delta_mean(self):
         return torch.min(
             torch.mean(
