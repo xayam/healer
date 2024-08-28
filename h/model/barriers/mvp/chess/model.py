@@ -140,9 +140,9 @@ class Model:
             with open(self.model_json, "w") as f:
                 json.dump(self.model_option, f)
         self.model = KAN(
-            width=[self.len_input, self.model_json["hidden_layer"]],
-            grid=self.model_json["grid"],
-            k=self.model_json["k"], auto_save=False, seed=0
+            width=[self.len_input, int(self.model_json["hidden_layer"])],
+            grid=int(self.model_json["grid"]),
+            k=int(self.model_json["k"]), auto_save=False, seed=0
         )
         if os.path.exists(self.file_model):
             self.model.load_state_dict(torch.load(self.file_model))
@@ -161,7 +161,7 @@ class Model:
             self.dataset = self.get_data(
                 fen_generator=self.get_fen_epd,
                 get_score=self.get_score,
-                count_limit=self.count_limit
+                count_limit=8  # self.count_limit
             )
             result = self.model.fit(
                 self.dataset, loss_fn=self.loss_function, steps=2,
@@ -184,8 +184,8 @@ class Model:
                 with open(self.file_formula, encoding="UTF-8", mode="w") as p:
                     p.write(str(formula).strip())
                 break
-            if count == 1:
-                break
+            # if count == 1:
+            #     break
 
     def model_params(self):
         print("self.model_params() starting...")
@@ -240,30 +240,22 @@ class Model:
 
     @staticmethod
     def loss_function(xx, yy):
-        return torch.abs(
-                torch.mean(xx) - torch.mean(yy)
+        return torch.mean(
+                yy - xx
         )
 
     def train_accuracy(self):
-        return torch.abs(
-            torch.mean(
-                self.model(self.dataset['train_input'])[:, 0]
-            )
+        return torch.mean(
+            self.model(self.dataset['train_input'])[:, 0]
             -
-            torch.mean(
-                self.dataset['train_label'][:, 0]
-            )
+            self.dataset['train_label'][:, 0]
         )
 
     def test_accuracy(self):
-        return torch.abs(
-            torch.mean(
-                self.model(self.dataset['test_input'])[:, 0]
-            )
+        return torch.mean(
+            self.model(self.dataset['test_input'])[:, 0]
             -
-            torch.mean(
-                self.dataset['test_label'][:, 0]
-            )
+            self.dataset['test_label'][:, 0]
         )
 
     def get_train(self, state1, state2):
