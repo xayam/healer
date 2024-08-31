@@ -75,21 +75,22 @@ if __name__ == "__main__":
     rnd = random.SystemRandom(0)
     hzs = []
     raw_file = open("raw.zip", mode="rb")
-    data = raw_file.read(1)
-    time = 1
+    data = 1
+    time = 0
     while data:
         for cpu in cpus:
             cpu.clear()
-            _, _ = cpu.get(raw=0, seek=time)
+            _, _ = cpu.get(raw=0, seek=time + 10000)
+            data = raw_file.read(1)
             if data:
                 data = int.from_bytes(data, byteorder="big")
-                rs, gzs = cpu.get(raw=data, seek=1)
+                rs, gzs = cpu.get(raw=data, seek=22)
+                gz = sum(gzs) // len(gzs)
                 if rs > 0:
                     print(f"time={time} | data={data} | rs={rs} | gzs={gzs}")
-                    for gz in gzs:
-                        winsound.Beep(gz, 6)
+                    # for gz in gzs:
+                    winsound.Beep(gz, 100)
             else:
                 break
-            data = raw_file.read(1)
         time += 1
     raw_file.close()
