@@ -89,7 +89,7 @@ if __name__ == "__main__":
                 if rs > 0:
                     print(f"time={time} | data={data} | rs={rs} | gzs={gzs}")
                     # for gz in gzs:
-                    winsound.Beep(gz, 100)
+                    winsound.Beep(gz, 22)
             else:
                 break
         time += 1
