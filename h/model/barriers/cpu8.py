@@ -1,18 +1,20 @@
+import functools
 import math
 import random
+import sys
 from typing import Tuple
 
 import winsound
 
 
 class CPU8:
-    n = 5
 
-    def __init__(self, limit):
+    def __init__(self, limit, n):
         self.limit = limit
+        self.n = n
         self.freq = [
             round(self.limit * 2 ** (i / self.n))
-            for i in range(0, self.n + 1)
+            for i in range(self.n + 1)
         ]
         self.input = []
         self.state = {}
@@ -32,6 +34,7 @@ class CPU8:
             self.input[i] = -1 if int(c) == 0 else 1
             i += 1
         positions = []
+        states = []
         for f in range(len(self.freq)):
             pos = self.freq[f]
             direction = -1
@@ -47,31 +50,22 @@ class CPU8:
                     continue
                 pos += direction
                 t -= 1
-            self.state[pos] = 1
+            self.state[pos - self.limit] = - self.state[pos - self.limit]
             positions.append(pos)
+            states.append(self.state[pos - self.limit])
             self.freq[f] = pos
-        result = self.input[0] * \
-                 self.input[1] * \
-                 self.state[positions[1] - self.limit]
-        result *= self.input[2] * \
-                  self.input[3] * \
-                  self.state[positions[2] - self.limit]
-        result *= self.input[4] * \
-                  self.input[5] * \
-                  self.state[positions[3] - self.limit]
-        result *= self.input[6] * \
-                  self.input[7] * \
-                  self.state[positions[4] - self.limit]
-        result *= self.state[positions[0] - self.limit] * \
-                  self.state[positions[-1] - self.limit]
+        result = functools.reduce(lambda a, b: a * b, self.input)
+        result *= functools.reduce(lambda a, b: a * b, states)
+        # sys.exit()
         self.clear()
         return result, positions
 
 if __name__ == "__main__":
+    n = 19
     limits = [216 * 2 ** i for i in range(6)]
     cpus = []
     for limit in limits:
-        cpus.append(CPU8(limit=limit))
+        cpus.append(CPU8(limit=limit, n=n))
     rnd = random.SystemRandom(0)
     hzs = []
     raw_file = open("raw.zip", mode="rb")
@@ -83,11 +77,10 @@ if __name__ == "__main__":
             if data:
                 data = int.from_bytes(data, byteorder="big")
                 rs, ps = cpu.get(raw=data, seek=time)
-                print(f"time={time} | raw={data} | result={rs}")
                 if rs == 1:
-                    for hz in ps:
-                        winsound.Beep(hz, 2)
-                        hzs.append(hz)
+                    print(f"time={time} | raw={data} | gz={ps} | rs={rs}")
+                    for h in range(len(ps)):
+                        winsound.Beep(ps[h], 2)
             else:
                 break
             data = raw_file.read(1)
