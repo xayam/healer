@@ -28,7 +28,7 @@ class CPU8:
         return self.process(value=raw, time=seek)
 
     def process(self, value: int, time: int) -> Tuple[int, list]:
-        s = f"{value:8b}".replace(" ", "0")
+        s = f"{value:8b}".replace(" ", "0")[::-1]
         i = 0
         for c in s:
             self.input[i] = -1 if int(c) == 0 else 1
@@ -54,14 +54,20 @@ class CPU8:
             positions.append(pos)
             states.append(self.state[pos - self.limit])
             self.freq[f] = pos
-        result = functools.reduce(lambda a, b: a * b, self.input)
-        result *= functools.reduce(lambda a, b: a * b, states)
+        result1 = self.input[0] * self.input[1] * states[1]
+        result2 = self.input[2] * self.input[3] * states[2]
+        result3 = self.input[4] * self.input[5] * states[3]
+        result4 = self.input[6] * self.input[7] * states[4]
+        result1 = (result1 + result2) * states[0]
+        result2 = (result3 + result4) * states[5]
+        result = result1 + result2
         # sys.exit()
         self.clear()
         return result, positions
 
+
 if __name__ == "__main__":
-    n = 19
+    n = 5
     limits = [216 * 2 ** i for i in range(6)]
     cpus = []
     for limit in limits:
@@ -76,11 +82,17 @@ if __name__ == "__main__":
             # data = rnd.choice(list(range(256)))
             if data:
                 data = int.from_bytes(data, byteorder="big")
-                rs, ps = cpu.get(raw=data, seek=time)
-                if rs == 1:
-                    print(f"time={time} | raw={data} | gz={ps} | rs={rs}")
-                    for h in range(len(ps)):
-                        winsound.Beep(ps[h], 2)
+                rs, gzs = cpu.get(raw=data, seek=time)
+                if rs > 0:
+                    gz = sum(gzs) / len(gzs)
+                    print(f"time={time} | raw={data} | gzs={gzs} | rs={rs}")
+                    if max(gzs) == min(gzs):
+                        duration = 0.1
+                    else:
+                        duration = (max(gzs) - gz) / (max(gzs) - min(gzs))
+                    # print(gz, duration)
+                    # sys.exit()
+                    winsound.Beep(round(gz), round(25 * duration) + 1)
             else:
                 break
             data = raw_file.read(1)
