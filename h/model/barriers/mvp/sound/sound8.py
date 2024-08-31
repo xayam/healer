@@ -74,7 +74,7 @@ if __name__ == "__main__":
         cpus.append(SOUND8(limit=limit, n=n))
     rnd = random.SystemRandom(0)
     hzs = []
-    raw_file = open("raw.zip", mode="rb")
+    raw_file = open("input.raw", mode="rb")
     data = 1
     time = 0
     while data:
