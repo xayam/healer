@@ -1,5 +1,7 @@
 import math
 import random
+from typing import Tuple
+
 import winsound
 
 
@@ -20,17 +22,18 @@ class CPU8:
         self.input = [0] * 8
         self.state = {pos: -1 for pos in range(self.limit + 1)}
 
-    def get(self, raw, seek):
+    def get(self, raw: int, seek: int) -> Tuple[int, list]:
         return self.process(value=raw, time=seek)
 
-    def process(self, value: int, time: int) -> int:
+    def process(self, value: int, time: int) -> Tuple[int, list]:
         s = f"{value:8b}".replace(" ", "0")
         i = 0
         for c in s:
             self.input[i] = -1 if int(c) == 0 else 1
             i += 1
-        for freq in self.freq:
-            pos = freq
+        positions = []
+        for f in range(len(self.freq)):
+            pos = self.freq[f]
             direction = -1
             t = time
             while t != 0:
@@ -45,30 +48,48 @@ class CPU8:
                 pos += direction
                 t -= 1
             self.state[pos] = 1
+            positions.append(pos)
+            self.freq[f] = pos
         result = self.input[0] * \
                  self.input[1] * \
-                 self.state[self.freq[1] - self.limit]
+                 self.state[positions[1] - self.limit]
         result *= self.input[2] * \
                   self.input[3] * \
-                  self.state[self.freq[2] - self.limit]
+                  self.state[positions[2] - self.limit]
         result *= self.input[4] * \
                   self.input[5] * \
-                  self.state[self.freq[3] - self.limit]
+                  self.state[positions[3] - self.limit]
         result *= self.input[6] * \
                   self.input[7] * \
-                  self.state[self.freq[4] - self.limit]
-        result *= self.state[self.freq[0] - self.limit] * \
-                  self.state[self.freq[-1] - self.limit]
+                  self.state[positions[4] - self.limit]
+        result *= self.state[positions[0] - self.limit] * \
+                  self.state[positions[-1] - self.limit]
         self.clear()
-        return result
+        return result, positions
 
 if __name__ == "__main__":
-    limit = 432//2
-    cpu = CPU8(limit=limit)
+    limits = [216 * 2 ** i for i in range(6)]
+    cpus = []
+    for limit in limits:
+        cpus.append(CPU8(limit=limit))
     rnd = random.SystemRandom(0)
-    for time in range(1024):
-        data = rnd.choice(list(range(256)))
-        r = cpu.get(raw=data, seek=time)
-        print(f"raw={data}, seek={time}, result={r}")
-        if r == -1:
-            winsound.Beep(432, 5)
+    hzs = []
+    raw_file = open("raw.zip", mode="rb")
+    data = raw_file.read(1)
+    time = 0
+    while data:
+        for cpu in cpus:
+            # data = rnd.choice(list(range(256)))
+            if data:
+                data = int.from_bytes(data, byteorder="big")
+                rs, ps = cpu.get(raw=data, seek=time)
+                print(f"time={time} | raw={data} | result={rs}")
+                if rs == 1:
+                    for hz in ps:
+                        winsound.Beep(hz, 2)
+                        hzs.append(hz)
+            else:
+                break
+            data = raw_file.read(1)
+        time += 1
+    raw_file.close()
