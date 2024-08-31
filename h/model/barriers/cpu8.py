@@ -35,16 +35,16 @@ class CPU8:
             i += 1
         positions = []
         states = []
-        for f in range(len(self.freq)):
+        for f in range(1, len(self.freq) - 1):
             pos = self.freq[f]
             direction = -1
             t = time
             while t != 0:
-                if pos == self.limit:
+                if pos == self.freq[f - 1]:
                     direction = 1
                     pos += direction
                     continue
-                elif pos == 2 * self.limit:
+                elif pos == self.freq[f + 1]:
                     direction = -1
                     pos += direction
                     continue
@@ -53,7 +53,6 @@ class CPU8:
             self.state[pos - self.limit] = - self.state[pos - self.limit]
             positions.append(pos)
             states.append(self.state[pos - self.limit])
-            self.freq[f] = pos
         result1 = self.input[0] * self.input[1] * states[1]
         result2 = self.input[2] * self.input[3] * states[2]
         result3 = self.input[4] * self.input[5] * states[3]
@@ -61,13 +60,12 @@ class CPU8:
         result1 = (result1 + result2) * states[0]
         result2 = (result3 + result4) * states[5]
         result = result1 + result2
-        # sys.exit()
         self.clear()
         return result, positions
 
 
 if __name__ == "__main__":
-    n = 5
+    n = 7
     limits = [216 * 2 ** i for i in range(6)]
     cpus = []
     for limit in limits:
@@ -82,17 +80,10 @@ if __name__ == "__main__":
             # data = rnd.choice(list(range(256)))
             if data:
                 data = int.from_bytes(data, byteorder="big")
-                rs, gzs = cpu.get(raw=data, seek=time)
+                rs, gzs = cpu.get(raw=data, seek=1)
                 if rs > 0:
-                    gz = sum(gzs) / len(gzs)
-                    print(f"time={time} | raw={data} | gzs={gzs} | rs={rs}")
-                    if max(gzs) == min(gzs):
-                        duration = 0.1
-                    else:
-                        duration = (max(gzs) - gz) / (max(gzs) - min(gzs))
-                    # print(gz, duration)
-                    # sys.exit()
-                    winsound.Beep(round(gz), round(25 * duration) + 1)
+                    for gz in gzs:
+                        winsound.Beep(gz, 4)
             else:
                 break
             data = raw_file.read(1)
