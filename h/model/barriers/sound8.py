@@ -7,21 +7,23 @@ from typing import Tuple
 import winsound
 
 
-class CPU8:
+class SOUND8:
 
     def __init__(self, limit, n):
         self.limit = limit
         self.n = n
-        self.freq = [
+        self.freq_curr = [
             round(self.limit * 2 ** (i / self.n))
             for i in range(self.n + 1)
         ]
+        self.freq_limit = self.freq_curr[:]
         self.input = []
         self.state = {}
         self.clear()
 
     def clear(self):
         self.input = [0] * 8
+        self.freq_curr = self.freq_limit[:]
         self.state = {pos: -1 for pos in range(self.limit + 1)}
 
     def get(self, raw: int, seek: int) -> Tuple[int, list]:
@@ -35,16 +37,16 @@ class CPU8:
             i += 1
         positions = []
         states = []
-        for f in range(1, len(self.freq) - 1):
-            pos = self.freq[f]
+        for f in range(1, len(self.freq_curr) - 1):
+            pos = self.freq_curr[f]
             direction = -1
             t = time
             while t != 0:
-                if pos == self.freq[f - 1]:
+                if pos == self.freq_limit[f - 1]:
                     direction = 1
                     pos += direction
                     continue
-                elif pos == self.freq[f + 1]:
+                elif pos == self.freq_limit[f + 1]:
                     direction = -1
                     pos += direction
                     continue
@@ -53,6 +55,7 @@ class CPU8:
             self.state[pos - self.limit] = - self.state[pos - self.limit]
             positions.append(pos)
             states.append(self.state[pos - self.limit])
+            self.freq_curr[f] = pos
         result1 = self.input[0] * self.input[1] * states[1]
         result2 = self.input[2] * self.input[3] * states[2]
         result3 = self.input[4] * self.input[5] * states[3]
@@ -60,7 +63,6 @@ class CPU8:
         result1 = (result1 + result2) * states[0]
         result2 = (result3 + result4) * states[5]
         result = result1 + result2
-        self.clear()
         return result, positions
 
 
@@ -69,21 +71,23 @@ if __name__ == "__main__":
     limits = [216 * 2 ** i for i in range(6)]
     cpus = []
     for limit in limits:
-        cpus.append(CPU8(limit=limit, n=n))
+        cpus.append(SOUND8(limit=limit, n=n))
     rnd = random.SystemRandom(0)
     hzs = []
     raw_file = open("raw.zip", mode="rb")
     data = raw_file.read(1)
-    time = 0
+    time = 1
     while data:
         for cpu in cpus:
-            # data = rnd.choice(list(range(256)))
+            cpu.clear()
+            _, _ = cpu.get(raw=0, seek=time)
             if data:
                 data = int.from_bytes(data, byteorder="big")
                 rs, gzs = cpu.get(raw=data, seek=1)
                 if rs > 0:
+                    print(f"time={time} | data={data} | rs={rs} | gzs={gzs}")
                     for gz in gzs:
-                        winsound.Beep(gz, 4)
+                        winsound.Beep(gz, 6)
             else:
                 break
             data = raw_file.read(1)
