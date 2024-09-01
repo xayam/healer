@@ -29,8 +29,8 @@ class CPU8:
         for c in s:
             self.input[i] = -1 if int(c) == 0 else 1
             i += 1
+        # pos_states = []
         positions = []
-        pos_states = []
         states = [-7, -5, -3, -1, 1, 3, 5, 7]
         directions = [1, -1, 1, -1, 1, -1, 1, -1]
         for f in range(1, len(self.freq_curr) - 1):
@@ -42,12 +42,12 @@ class CPU8:
                     direction = -direction
                 elif states[f] >= self.n:
                     direction = -direction
-                pos += states[f]
                 states[f] += direction
+                pos += states[f]
                 t -= 1
-            self.state[pos - self.limit] = - self.state[pos - self.limit]
+            # self.state[pos - self.limit] = - self.state[pos - self.limit]
             positions.append(pos)
-            pos_states.append(self.state[pos - self.limit])
+            # pos_states.append(self.state[pos - self.limit])
             self.freq_curr[f] = pos
         result = []
         for i in range(len(self.input)):
