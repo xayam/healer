@@ -82,37 +82,35 @@ class ClockWidget(GridLayout):
 
     def main(self):
         n = 10
-        limits = [216 * 2 ** i for i in range(6)]
+        limits = [216 * 16 * 2 ** i for i in range(2)]
         cpus = []
         for limit in limits:
             cpus.append(CPU8(limit=limit, n=n))
-        raw_file = open("input.raw", mode="rb")
+        raw_file = open("input.raw.txt", mode="rb")
         rnd = random.SystemRandom(0)
         data = 1
         time = 0
         while data:
-            for cpu in cpus:
-                cpu.clear()
-                _, _ = cpu.get(raw=0, seek=time + 10000)
-                data = raw_file.read(1)
-                if data:
-                    data = int.from_bytes(data, byteorder="big")
-                    # data = 42
+            data = raw_file.read(1)
+            if data:
+                data = int.from_bytes(data, byteorder="big")
+                frequency = []
+                power = []
+                for cpu in cpus:
+                    cpu.clear()
+                    _, _ = cpu.get(raw=0, seek=time)
                     rs, hzs = cpu.get(raw=data, seek=1)
-                    hz = sum(hzs) // len(hzs)
-                    # if rs > -12222:
-                    if rs >= -6000:
-                        print(
-                            f"time={time} | data={data} | rs={rs} " +
-                            f"| hz={hz} | hzs={hzs}"
-                        )
-                        # for hz in hzs:
-                        self.beeps.play(frequency=hz)
-                        sleep(2 * (rs + 8) / 1000)
-                        # for _ in hzs:
-                        self.beeps.stop(0)
-                else:
-                    break
+                    frequency += hzs
+                    table = {-6: 1, -4: 2, -2: 3, 0: 4, 2: 5, 4: 6, 6: 7}
+                    power.append(table[rs])
+                duration = sum(power) / len(power) / 1000
+                hz = sum(frequency) // len(frequency)
+                print(
+                    f"time={time} | data={data} | hz={hz} | duration={duration}"
+                )
+                self.beeps.play(frequency=hz)
+                sleep(duration)
+                self.beeps.stop(0)
             time += 1
         raw_file.close()
 
