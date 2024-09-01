@@ -1,4 +1,5 @@
 import random
+import sys
 import threading
 from time import sleep
 
@@ -96,14 +97,18 @@ class ClockWidget(GridLayout):
                 data = raw_file.read(1)
                 if data:
                     data = int.from_bytes(data, byteorder="big")
+                    # data = 42
                     rs, hzs = cpu.get(raw=data, seek=1)
                     hz = sum(hzs) // len(hzs)
-                    if rs > -90:
+                    # if rs > -12222:
+                    if rs >= -6000:
                         print(
-                            f"time={time} | data={data} | rs={rs} | gzs={hzs}")
+                            f"time={time} | data={data} | rs={rs} " +
+                            f"| hz={hz} | hzs={hzs}"
+                        )
                         # for hz in hzs:
                         self.beeps.play(frequency=hz)
-                        sleep(2 / 1000)
+                        sleep(2 * (rs + 8) / 1000)
                         # for _ in hzs:
                         self.beeps.stop(0)
                 else:

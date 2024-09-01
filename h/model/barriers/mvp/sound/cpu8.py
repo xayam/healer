@@ -8,7 +8,7 @@ class CPU8:
         self.n = n
         self.freq_curr = [
             round(self.limit * 2 ** (i / self.n))
-            for i in range(self.n + 1)
+            for i in range(1, self.n - 1)
         ]
         self.freq_limit = self.freq_curr[:]
         self.input = []
@@ -31,10 +31,11 @@ class CPU8:
             i += 1
         # pos_states = []
         positions = []
-        states = [-7, -5, -3, -1, 1, 3, 5, 7]
+        result_states = []
         directions = [1, -1, 1, -1, 1, -1, 1, -1]
-        for f in range(1, len(self.freq_curr) - 1):
+        for f in range(len(self.freq_curr)):
             pos = self.freq_curr[f]
+            states = [-7, -5, -3, -1, 1, 3, 5, 7]
             direction = directions[f]
             t = time
             while t > 0:
@@ -45,11 +46,11 @@ class CPU8:
                 states[f] += direction
                 pos += states[f]
                 t -= 1
-            # self.state[pos - self.limit] = - self.state[pos - self.limit]
+            result_states.append(states)
             positions.append(pos)
-            # pos_states.append(self.state[pos - self.limit])
             self.freq_curr[f] = pos
         result = []
         for i in range(len(self.input)):
-            result.append(self.input[i] * states[i])
+            for f in range(len(self.freq_limit)):
+                result.append(self.input[i] * result_states[i][f])
         return sum(result), positions
