@@ -80,7 +80,7 @@ class ClockWidget(GridLayout):
         self.ids.b1.disabled = True
 
     def main(self):
-        n = 7
+        n = 10
         limits = [216 * 2 ** i for i in range(6)]
         cpus = []
         for limit in limits:

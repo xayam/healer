@@ -30,32 +30,26 @@ class CPU8:
             self.input[i] = -1 if int(c) == 0 else 1
             i += 1
         positions = []
-        states = []
+        pos_states = []
+        states = [-7, -5, -3, -1, 1, 3, 5, 7]
+        directions = [1, -1, 1, -1, 1, -1, 1, -1]
         for f in range(1, len(self.freq_curr) - 1):
             pos = self.freq_curr[f]
-            direction = -1
+            direction = directions[f]
             t = time
-            while t != 0:
-                if pos == self.freq_limit[f - 1]:
-                    direction = 1
-                    pos += direction
-                    # continue
-                elif pos == self.freq_limit[f + 1]:
-                    direction = -1
-                    pos += direction
-                    # continue
-                else:
-                    pos += direction
+            while t > 0:
+                if states[f] <= -self.n:
+                    direction = -direction
+                elif states[f] >= self.n:
+                    direction = -direction
+                pos += states[f]
+                states[f] += direction
                 t -= 1
             self.state[pos - self.limit] = - self.state[pos - self.limit]
             positions.append(pos)
-            states.append(self.state[pos - self.limit])
+            pos_states.append(self.state[pos - self.limit])
             self.freq_curr[f] = pos
-        result1 = self.input[0] * self.input[1] * states[1]
-        result2 = self.input[2] * self.input[3] * states[2]
-        result3 = self.input[4] * self.input[5] * states[3]
-        result4 = self.input[6] * self.input[7] * states[4]
-        result1 = (result1 + result2) * states[0]
-        result2 = (result3 + result4) * states[5]
-        result = result1 + result2
-        return result, positions
+        result = []
+        for i in range(len(self.input)):
+            result.append(self.input[i] * states[i])
+        return sum(result), positions
