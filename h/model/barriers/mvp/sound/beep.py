@@ -1,5 +1,6 @@
+import math
 import random
-import sys
+import matplotlib.pyplot as plt
 import threading
 from time import sleep
 
@@ -81,37 +82,60 @@ class ClockWidget(GridLayout):
         self.ids.b1.disabled = True
 
     def main(self):
-        n = 1 + 8 + 1
-        limits = [432 // 8 * 2 ** i for i in range(n-2)]
+        n = 4
+        limits = [1 * 2 ** i for i in range(n-3)]
         cpus = []
         for limit in limits:
-            cpus.append(CPU8(limit=limit, n=n))
-        raw_file = open("input.raw.txt", mode="rb")
-        rnd = random.SystemRandom(0)
-        data = 1
-        time = 0
-        while data:
-            data = raw_file.read(1)
-            if data:
-                data = int.from_bytes(data, byteorder="big")
-                frequency = []
-                durations = []
+            cpus.append(CPU8(limit=limit, n=10))
+        # raw_file = open("input.raw.txt", mode="rb")
+        # rnd = random.SystemRandom(0)
+        r = []
+        for time in range(1, 10):
+            # data = raw_file.read(1)
+            for data in range(256):
+                # data = int.from_bytes(data, byteorder="big")
+                result = {}
                 for cpu in cpus:
-                    cpu.clear()
-                    _, _ = cpu.get(raw=0, seek=time)
-                    results = cpu.get(raw=data, seek=1)
-                    for r in results:
-                        print(
-                            f"time={time} | data={data} | " +
-                            f"hz={r['hz']} | duration={r['duration']}"
-                        )
-                        self.beeps.play(frequency=r['hz'])
-                    sleep(results[0]['duration'])
-                    for i in range(len(results[1:])):
-                        sleep(results[i]['duration'] - results[i-1]['duration'])
-                        self.beeps.stop(0)
-            time += 1
-        raw_file.close()
+                    uniq = ""
+                    results = cpu.get(raw=data, seek=time)
+                    # result[sum(results.keys()) // len(results)] = \
+                    #        sum(results.values()) // len(results)
+                    # r.append(results)
+                    print(
+                        f"time={time} | data={data} | " +
+                        f"{results}"
+                    )
+                    for i in range(len(results)):
+                        for key, value in results[i].items():
+                            values = []
+                            for val in value:
+                                values.append(val)
+                            uniq += str(i) + str(key).rjust(3, '0') + \
+                                    "".join(map(str, values))
+                    r.append(uniq)
+                # result_list = sorted(result.items(), key=lambda x: x[1])
+                # result_dict = dict(result_list)
+                # for hz, _ in results.items():
+                #     duration = 1 / (432 // 8 * 2 ** (n - 2) - hz)
+                #     duration = 100 * math.pi * duration
+                    # result_dict[hz] = duration
+                    # self.beeps.play(frequency=hz)
+                # result_list = sorted(result_dict.items(), key=lambda x: x[1])
+
+                # sleep(result_list[0][1])
+                # self.beeps.stop(0)
+                # for i in range(1, len(result_list)):
+                #     print(
+                #         f"time={time} | data={data} | " +
+                #         f"hz={result_list[i][0]} | duration={result_list[i][1]}"
+                #     )
+                #     sleep(result_list[i][1] - result_list[i-1][1])
+                #     self.beeps.stop(0)
+            assert len(r) == len(set(r))
+        # raw_file.close()
+
+        # plt.plot(fx)
+        # plt.show()
 
 class clockdemoapp(App):
     def build(self):
