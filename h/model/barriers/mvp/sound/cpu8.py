@@ -20,10 +20,10 @@ class CPU8:
         self.freq_curr = self.freq_limit[:]
         self.state = {pos: -1 for pos in range(self.limit + 1)}
 
-    def get(self, raw: int, seek: int) -> Tuple[int, list]:
+    def get(self, raw: int, seek: int) -> list:
         return self.process(value=raw, time=seek)
 
-    def process(self, value: int, time: int) -> Tuple[int, list]:
+    def process(self, value: int, time: int) -> list:
         s = f"{value:8b}".replace(" ", "0")[::-1]
         i = 0
         for c in s:
@@ -49,8 +49,13 @@ class CPU8:
             result_states.append(states)
             positions.append(pos)
             self.freq_curr[f] = pos
-        result = []
+        results = []
+        table = {-6: 1, -4: 2, -2: 3, 0: 4, 2: 5, 4: 6, 6: 7}
         for i in range(len(self.input)):
+            result = []
             for f in range(len(self.freq_limit)):
                 result.append(self.input[i] * result_states[i][f])
-        return sum(result), positions
+            result = table[sum(result)]
+            results.append({"hz": positions[i], "duration": result})
+        results = sorted(results, key=lambda x: x["duration"])
+        return results

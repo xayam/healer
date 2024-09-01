@@ -81,8 +81,8 @@ class ClockWidget(GridLayout):
         self.ids.b1.disabled = True
 
     def main(self):
-        n = 10
-        limits = [216 * 16 * 2 ** i for i in range(2)]
+        n = 1 + 8 + 1
+        limits = [432 // 8 * 2 ** i for i in range(n-2)]
         cpus = []
         for limit in limits:
             cpus.append(CPU8(limit=limit, n=n))
@@ -95,22 +95,21 @@ class ClockWidget(GridLayout):
             if data:
                 data = int.from_bytes(data, byteorder="big")
                 frequency = []
-                power = []
+                durations = []
                 for cpu in cpus:
                     cpu.clear()
                     _, _ = cpu.get(raw=0, seek=time)
-                    rs, hzs = cpu.get(raw=data, seek=1)
-                    frequency += hzs
-                    table = {-6: 1, -4: 2, -2: 3, 0: 4, 2: 5, 4: 6, 6: 7}
-                    power.append(table[rs])
-                duration = sum(power) / len(power) / 1000
-                hz = sum(frequency) // len(frequency)
-                print(
-                    f"time={time} | data={data} | hz={hz} | duration={duration}"
-                )
-                self.beeps.play(frequency=hz)
-                sleep(duration)
-                self.beeps.stop(0)
+                    results = cpu.get(raw=data, seek=1)
+                    for r in results:
+                        print(
+                            f"time={time} | data={data} | " +
+                            f"hz={r['hz']} | duration={r['duration']}"
+                        )
+                        self.beeps.play(frequency=r['hz'])
+                    sleep(results[0]['duration'])
+                    for i in range(len(results[1:])):
+                        sleep(results[i]['duration'] - results[i-1]['duration'])
+                        self.beeps.stop(0)
             time += 1
         raw_file.close()
 
