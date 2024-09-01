@@ -1,13 +1,7 @@
-import functools
-import math
-import random
-import sys
 from typing import Tuple
 
-import winsound
 
-
-class SOUND8:
+class CPU8:
 
     def __init__(self, limit, n):
         self.limit = limit
@@ -45,12 +39,13 @@ class SOUND8:
                 if pos == self.freq_limit[f - 1]:
                     direction = 1
                     pos += direction
-                    continue
+                    # continue
                 elif pos == self.freq_limit[f + 1]:
                     direction = -1
                     pos += direction
-                    continue
-                pos += direction
+                    # continue
+                else:
+                    pos += direction
                 t -= 1
             self.state[pos - self.limit] = - self.state[pos - self.limit]
             positions.append(pos)
@@ -64,33 +59,3 @@ class SOUND8:
         result2 = (result3 + result4) * states[5]
         result = result1 + result2
         return result, positions
-
-
-if __name__ == "__main__":
-    n = 7
-    limits = [216 * 2 ** i for i in range(6)]
-    cpus = []
-    for limit in limits:
-        cpus.append(SOUND8(limit=limit, n=n))
-    rnd = random.SystemRandom(0)
-    hzs = []
-    raw_file = open("input.raw", mode="rb")
-    data = 1
-    time = 0
-    while data:
-        for cpu in cpus:
-            cpu.clear()
-            _, _ = cpu.get(raw=0, seek=time + 10000)
-            data = raw_file.read(1)
-            if data:
-                data = int.from_bytes(data, byteorder="big")
-                rs, gzs = cpu.get(raw=data, seek=22)
-                gz = sum(gzs) // len(gzs)
-                if rs > 0:
-                    print(f"time={time} | data={data} | rs={rs} | gzs={gzs}")
-                    # for gz in gzs:
-                    winsound.Beep(gz, 22)
-            else:
-                break
-        time += 1
-    raw_file.close()
