@@ -15,7 +15,18 @@ class CPU:
         self.input = [0] * self.lenght
 
     def get(self, raw: int, seek: int) -> list:
-        return self.process(value=raw, time=seek)
+        return self.process(
+            value=raw,
+            time=seek
+        )
+
+    def check(self, results: list, raw: int, seek: int) -> bool:
+        recovery = self.antiprocess(
+            results=results,
+            # value=raw,
+            time=seek
+        )
+        return recovery == raw
 
     def process(self, value: int, time: int) -> list:
         s = f"{value:{self.lenght}b}".replace(" ", "0")
@@ -47,3 +58,6 @@ class CPU:
                 result.append(self.input[i] * states[f])
             results.append({positions[i]:  result})
         return results
+
+    def antiprocess(self, results: list, time) -> int:
+        return 0
