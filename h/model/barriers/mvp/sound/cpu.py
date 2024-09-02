@@ -26,7 +26,6 @@ class CPU:
         return recovery == self.raw
 
     def value2input(self):
-        # s = f"{self.raw:{self.lenght}b}".replace(" ", "0")
         i = 0
         for digit in self.raw:
             self.input[i] = -1 if int(digit) == 0 else 1
