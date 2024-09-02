@@ -1,15 +1,9 @@
-import math
-import random
-import matplotlib.pyplot as plt
 import threading
-from time import sleep
-
 import numpy
 import pygame
 from pygame.mixer import Sound, pre_init
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
-from kivy.clock import Clock
 from kivy.core.window import Window
 
 from model.barriers.mvp.sound.cpu import CPU
@@ -82,32 +76,55 @@ class ClockWidget(GridLayout):
         self.ids.b1.disabled = True
 
     def main(self):
-        dimension = 16
         scheme = {
             # "x": 16, "y": 16, "z": 16,
-            # "r": 8, "g": 8,
-            "b": dimension,
+            # "r": 8,
+            # "g": 4,
+            # "b": 4,
+            "c": 12,
         }
-        schemes = {i: 1 + scheme[i] + 1 for i in scheme}
+        scheme_protect = {}
+        for s in scheme:
+            scheme_protect[s] = 1 + scheme[s] + 1
+        dimension = sum(scheme.values())
         cpu = {}
-        for i in schemes:
-            cpu[i] = CPU(n=schemes[i])
+        r = {}
+        for index in scheme:
+            cpu[index] = CPU(n=scheme_protect[index])
         raw_file = open("input.raw.txt", mode="rb")
-        r = []
-        for tachyon in range(1, dimension + 1):
+        ending = ""
+        for seek in range(1, 12):
             dataset = []
             for index in scheme:
-                data = raw_file.read(scheme[index] // 8)
-                data = int.from_bytes(data, byteorder="big")
-                dataset.append({index: data})
+                r[index] = []
+            dim = dimension - len(ending)
+            count_bytes = \
+                dim // 8 if dim % 8 == 0 \
+                else dim // 8 + 1
+            data = raw_file.read(count_bytes)
+            data = int.from_bytes(data, byteorder="big")
+            data = f"{data:{8 * count_bytes}b}".replace(' ', '0')
+            data = ending + data
+            start = 0
+            for index in scheme:
+                raw = data[start:start + scheme[index]]
+                raw = raw.rjust(scheme[index], '0')
+                dataset.append({index: raw})
+                start += scheme[index]
+            ending = data[start:]
+
             dataset = []
-            for data in range(2 ** dimension):
-                dataset.append({"b": data})
+            for index in scheme:
+                for data in range(2 ** scheme[index]):
+                    raw = f"{data:{scheme[index]}b}". \
+                        replace(' ', '0')
+                    dataset.append({index: raw})
+
             for chunk in dataset:
-                for index, data in chunk.items():
+                for index, raw in chunk.items():
                     uniq = ""
                     summa = 0
-                    results = cpu[index].get(raw=data, seek=tachyon)
+                    results = cpu[index].get(raw=raw, seek=seek)
                     for i in range(len(results)):
                         for key, value in results[i].items():
                             buffer = []
@@ -117,16 +134,16 @@ class ClockWidget(GridLayout):
                                     "|" + "|".join(
                                 map(lambda x: str(x).rjust(
                                     2, '0'),
-                                    buffer))
-                            summa += key + sum(value)
-                    r.append(uniq)
+                                    value))
+                            summa += sum(buffer)
+                    r[index].append(uniq)
                     print(
-                        f"time={tachyon} | " +
-                        f"data={str(data).rjust(3, ' ')} | " +
+                        f"seek={str(seek).rjust(len(str(dimension)), ' ')} | " +
+                        f"raw={str(raw).rjust(max(scheme.values()), ' ')} | " +
                         f"summa={str(summa).rjust(4, ' ')} " +
-                        f"{r[-1]}"
+                        f"{r[index][-1]}"
                     )
-                    assert len(r) == len(set(r))
+                    assert len(r[index]) == len(set(r[index]))
                 # duration = 1 / (432 // 8 * 2 ** (n - 2) - hz)
                 # duration = 100 * math.pi * duration
                 # self.beeps.play(frequency=hz)
