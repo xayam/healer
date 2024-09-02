@@ -82,42 +82,46 @@ class ClockWidget(GridLayout):
         self.ids.b1.disabled = True
 
     def main(self):
+        bits = 11
         scheme = {
             # "x": 16, "y": 16, "z": 16,
             # "r": 8, "g": 8,
-            "b": 8,
+            "b": bits,
         }
         schemes = {i: 1 + scheme[i] + 1 for i in scheme}
         cpu = {}
         for i in schemes:
-            assert scheme[i] % 8 == 0
+            # assert scheme[i] % 8 == 0
             cpu[i] = CPU(n=schemes[i])
         raw_file = open("input.raw.txt", mode="rb")
         r = []
-        for time in range(1, 10):
+        for tachyon in range(1, bits + 1):
             dataset = []
             for index in scheme:
                 data = raw_file.read(scheme[index] // 8)
                 data = int.from_bytes(data, byteorder="big")
                 dataset.append({index: data})
-            # dataset = []
-            # for data in range(256):
-            #     dataset.append({"b": data})
+            dataset = []
+            for data in range(2 ** bits):
+                dataset.append({"b": data})
             for chunk in dataset:
                 for index, data in chunk.items():
                     uniq = ""
-                    results = cpu[index].get(raw=data, seek=time)
+                    summa = 0
+                    results = cpu[index].get(raw=data, seek=tachyon)
                     for i in range(len(results)):
                         for key, value in results[i].items():
-                            uniq += "|" + str(key).rjust(3, '0') + \
-                                     "|" +  "|".join(
+                            # uniq += "|" + str(key).rjust(3, '0') + \
+                            #          "|" + \
+                            uniq += "".join(
                                 map(lambda x: str(x).rjust(3, '0'), value)
                             )
+                            summa += key + sum(value)
                     r.append(uniq)
                     print(
-                        f"time={time} | " +
+                        f"time={tachyon} | " +
                         f"data={str(data).rjust(3, ' ')} | " +
-                        # f"uniq={uniq} | " +
+                        f"summa={str(summa).rjust(4, ' ')} | " +
                         f"{results}"
                     )
                     assert len(r) == len(set(r))
@@ -128,8 +132,8 @@ class ClockWidget(GridLayout):
                 # self.beeps.stop(0)
                 # for i in range(1, len(result_list)):
                 #     print(
-                #         f"time={time} | data={data} | " +
-                #         f"hz={result_list[i][0]} | duration={result_list[i][1]}"
+                #      f"time={time} | data={data} | " +
+                #      f"hz={result_list[i][0]} | duration={result_list[i][1]}"
                 #     )
                 #     sleep(result_list[i][1] - result_list[i-1][1])
                 #     self.beeps.stop(0)

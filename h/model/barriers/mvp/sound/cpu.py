@@ -1,9 +1,9 @@
-from typing import Tuple
-
 
 class CPU:
 
     def __init__(self, n: int, limit: int = 1):
+        self.raw = None
+        self.seek = None
         self.limit = limit
         self.n = n
         self.lenght = self.n - 2
@@ -15,33 +15,30 @@ class CPU:
         self.input = [0] * self.lenght
 
     def get(self, raw: int, seek: int) -> list:
-        return self.process(
-            value=raw,
-            time=seek
-        )
+        self.raw = raw
+        self.seek = seek
+        return self.process()
 
-    def check(self, results: list, raw: int, seek: int) -> bool:
-        recovery = self.antiprocess(
+    def check(self, results: list) -> bool:
+        recovery = self.anti_process(
             results=results,
-            # value=raw,
-            time=seek
         )
-        return recovery == raw
+        return recovery == self.raw
 
-    def process(self, value: int, time: int) -> list:
-        s = f"{value:{self.lenght}b}".replace(" ", "0")
+    def value2input(self):
+        s = f"{self.raw:{self.lenght}b}".replace(" ", "0")
         i = 0
-        # print(s)
         for c in s:
-            # print(i)
             self.input[i] = -1 if int(c) == 0 else 1
             i += 1
+
+    def freq2statepos(self):
         positions = []
-        states = self.input
+        states = self.input[:]
         for f in range(len(self.freq_curr)):
             pos = self.freq_curr[f]
             direction = 1
-            t = time
+            t = self.seek
             while t > 0:
                 if states[f] <= -self.n:
                     direction = 1
@@ -51,6 +48,11 @@ class CPU:
                 pos += direction
                 t -= 1
             positions.append(pos)
+        return states, positions
+
+    def process(self) -> list:
+        self.value2input()
+        states, positions = self.freq2statepos()
         results = []
         for i in range(len(self.input)):
             result = []
@@ -59,5 +61,5 @@ class CPU:
             results.append({positions[i]:  result})
         return results
 
-    def antiprocess(self, results: list, time) -> int:
-        return 0
+    def anti_process(self, results: list) -> int:
+        return len(results)
