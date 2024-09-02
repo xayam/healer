@@ -111,11 +111,10 @@ class ClockWidget(GridLayout):
                     results = cpu[index].get(raw=data, seek=tachyon)
                     for i in range(len(results)):
                         for key, value in results[i].items():
-                            # uniq += "|" + str(key).rjust(3, '0') + \
-                            #          "|" + \
                             uniq += "".join(
-                                map(lambda x: str(x).rjust(3, '0'), value)
-                            )
+                                map(lambda x: str(x).rjust(
+                                    3, '0'),
+                                    value))
                             summa += key + sum(value)
                     r.append(uniq)
                     print(
