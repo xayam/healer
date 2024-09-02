@@ -84,7 +84,7 @@ class ClockWidget(GridLayout):
             # "r": 8,
             # "g": 4,
             # "b": 4,
-            "c": 8,
+            "c": 3,
         }
         scheme_protect = {}
         for s in scheme:
@@ -134,9 +134,9 @@ class ClockWidget(GridLayout):
                                 buffer = []
                                 for v in value:
                                     buffer.append(key + v)
-                                uniq += "|>" + str(key).rjust(2, ' ') + \
+                                uniq += "|>" + str(key).rjust(1, ' ') + \
                                     "<|" + "|".join(map(lambda x: str(x).rjust(
-                                        3, ' '),
+                                        2, ' '),
                                         value))
                                 summa += sum(buffer)
                         r[index].append(uniq)
@@ -147,11 +147,13 @@ class ClockWidget(GridLayout):
                             f"{r[index][-1]}"
                         )
                         assert len(r[index]) == len(set(r[index]))
-                        hz = summa
-                        duration = 1 / (math.pi ** 2 * 2 ** dimension - hz)
-                        self.beeps.play(frequency=hz)
-                        sleep(duration)
-                        self.beeps.stop(0)
+                        # hz = summa
+                        # duration = 1 / (math.pi ** 2 * 2 ** dimension - hz)
+                        # duration = duration * 2 ** seek
+                        # print(duration)
+                        # self.beeps.play(frequency=hz)
+                        # sleep(duration)
+                        # self.beeps.stop(0)
                     # for i in range(1, len(result_list)):
                     #     print(
                     #      f"time={time} | data={data} | " +
