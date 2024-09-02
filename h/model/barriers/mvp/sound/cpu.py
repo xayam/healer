@@ -1,7 +1,12 @@
+from time import sleep
+
 
 class CPU:
 
-    def __init__(self, n: int, limit: int = 1):
+    def __init__(self, n: int, limit: int = 1, beeps = None):
+        self.results_old = []
+        self.results = []
+        self.beeps = beeps
         self.raw = None
         self.seek = None
         self.limit = limit
@@ -14,16 +19,38 @@ class CPU:
         self.freq_limit = self.freq_curr[:]
         self.input = [0] * self.lenght
 
-    def get(self, raw: str, seek: int) -> list:
+    def get(self, raw: str, seek: int, mute: bool = True) -> list:
         self.raw = raw[::-1]
         self.seek = seek
-        return self.process()
+        self.results_old = self.results[:]
+        self.results = self.process()
+        if not mute and self.results_old:
+            self.play()
+        return self.results
 
     def check(self, results: list) -> bool:
         recovery = self.anti_process(
             results=results,
         )
         return recovery == self.raw
+
+    def play(self):
+        print(self.results_old)
+        print(self.results)
+        # hz = summa
+        # duration = 1 / (math.pi ** 2 * 2 ** self.dimension - hz)
+        # duration = duration * 2 ** seek
+        # print(duration)
+        # self.beeps.play(frequency=55)
+        # sleep(0)
+        # self.beeps.stop(0)
+        # for i in range(1, len(result_list)):
+        #     print(
+        #      f"time={time} | data={data} | " +
+        #      f"hz={result_list[i][0]} | duration={result_list[i][1]}"
+        #     )
+        #     sleep(result_list[i][1] - result_list[i-1][1])
+        #     self.beeps.stop(0)
 
     def value2input(self):
         i = 0
