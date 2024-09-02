@@ -12,7 +12,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.clock import Clock
 from kivy.core.window import Window
 
-from model.barriers.mvp.sound.cpu8 import CPU8
+from model.barriers.mvp.sound.cpu import CPU
 
 Window.size = (720, 400)
 
@@ -82,30 +82,31 @@ class ClockWidget(GridLayout):
         self.ids.b1.disabled = True
 
     def main(self):
-        n = 10
-        limits = [1]
-        cpus = []
-        for limit in limits:
-            cpus.append(CPU8(limit=limit, n=n))
-        # raw_file = open("input.raw.txt", mode="rb")
-        # rnd = random.SystemRandom(0)
+        scheme = {
+            "x": 16, "y": 16, "z": 16,
+            "r": 8, "g": 8, "b": 8,
+        }
+        schemes = {i: 1 + scheme[i] + 1 for i in scheme}
+        cpu = {}
+        for i in schemes:
+            assert scheme[i] % 8 == 0
+            cpu[i] = CPU(n=schemes[i])
+        raw_file = open("input.raw.txt", mode="rb")
         r = []
-        for time in range(1, n):
-            # data = raw_file.read(1)
-            for data in range(256):
-                # data = int.from_bytes(data, byteorder="big")
-                for cpu in cpus:
-                    uniq = ""
-                    results = cpu.get(raw=data, seek=time)
-                    print(
-                        f"time={time} | data={data} | " +
-                        f"{results}"
-                    )
-                    for i in range(len(results)):
-                        for key, value in results[i].items():
-                            uniq += str(key + sum(value)).rjust(3, '0')
-                    # print(len(uniq))
-                    r.append(uniq)
+        for time in range(1, 10):
+            for index in scheme:
+                data = raw_file.read(scheme[index] // 8)
+                data = int.from_bytes(data, byteorder="big")
+                uniq = ""
+                results = cpu[index].get(raw=data, seek=time)
+                print(
+                    f"time={time} | data={data} | " +
+                    f"{results}"
+                )
+                for i in range(len(results)):
+                    for key, value in results[i].items():
+                        uniq += str(key + sum(value)).rjust(3, '0')
+                r.append(uniq)
                 # result_list = sorted(result.items(), key=lambda x: x[1])
                 # result_dict = dict(result_list)
                 # for hz, _ in results.items():
@@ -124,8 +125,8 @@ class ClockWidget(GridLayout):
                 #     )
                 #     sleep(result_list[i][1] - result_list[i-1][1])
                 #     self.beeps.stop(0)
-            assert len(r) == len(set(r))
-        # raw_file.close()
+            # assert len(r) == len(set(r))
+        raw_file.close()
 
         # plt.plot(fx)
         # plt.show()
