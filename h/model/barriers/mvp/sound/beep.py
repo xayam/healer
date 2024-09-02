@@ -82,7 +82,7 @@ class ClockWidget(GridLayout):
         self.ids.b1.disabled = True
 
     def main(self):
-        bits = 11
+        bits = 16
         scheme = {
             # "x": 16, "y": 16, "z": 16,
             # "r": 8, "g": 8,
@@ -91,7 +91,6 @@ class ClockWidget(GridLayout):
         schemes = {i: 1 + scheme[i] + 1 for i in scheme}
         cpu = {}
         for i in schemes:
-            # assert scheme[i] % 8 == 0
             cpu[i] = CPU(n=schemes[i])
         raw_file = open("input.raw.txt", mode="rb")
         r = []
@@ -111,17 +110,21 @@ class ClockWidget(GridLayout):
                     results = cpu[index].get(raw=data, seek=tachyon)
                     for i in range(len(results)):
                         for key, value in results[i].items():
-                            uniq += "".join(
+                            buffer = []
+                            for v in value:
+                                buffer.append(key + v)
+                            uniq += "|" + str(key).rjust(2, '0') + \
+                                    "|" + "|".join(
                                 map(lambda x: str(x).rjust(
-                                    3, '0'),
-                                    value))
+                                    2, '0'),
+                                    buffer))
                             summa += key + sum(value)
                     r.append(uniq)
                     print(
                         f"time={tachyon} | " +
                         f"data={str(data).rjust(3, ' ')} | " +
                         f"summa={str(summa).rjust(4, ' ')} | " +
-                        f"{results}"
+                        f"{r[-1]}"
                     )
                     assert len(r) == len(set(r))
                 # duration = 1 / (432 // 8 * 2 ** (n - 2) - hz)
