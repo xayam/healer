@@ -9,7 +9,7 @@ class Process:
     def __init__(self, beeps):
         self.dataset = None
         self.cpu = None
-        self.r = None
+        self.res = None
         self.ending = None
         self.raw_file = None
         self.beeps = beeps
@@ -28,10 +28,11 @@ class Process:
 
     def main(self):
         self.cpu = {}
-        self.r = {}
+        self.res = {}
         self.ending = ""
         for index in self.scheme:
             self.cpu[index] = CPU(n=self.scheme_protect[index])
+            self.res[index] = []
 
         self.raw_file = open("input.raw.txt", mode="rb")
         while True:
@@ -41,23 +42,24 @@ class Process:
 
     def process(self):
         for seek in range(1, self.dimension + 1):
-            self.dataset = self.get_data()
+            # self.dataset = self.get_data()
             self.dataset = self.get_data_all()
             self.process_dataset(seek=seek)
 
     def process_dataset(self, seek):
+        print(self.res)
         for chunk in self.dataset:
             for index, raw in chunk.items():
                 results = self.cpu[index].get(raw=raw, seek=seek)
                 uniq, summa = self.get_uniq(results)
-                self.r[index].append(uniq)
+                self.res[index].append(uniq)
                 print(
                     f"seek={str(seek).rjust(2, ' ')} | " +
                     f"raw={str(raw).rjust(max(self.scheme.values()), ' ')} | " +
                     f"summa={str(summa).rjust(4, ' ')} " +
-                    f"{self.r[index][-1]}"
+                    f"{self.res[index][-1]}"
                 )
-                assert len(self.r[index]) == len(set(self.r[index]))
+                assert len(self.res[index]) == len(set(self.res[index]))
 
     def get_data_all(self) -> list:
         dataset = []
@@ -70,10 +72,10 @@ class Process:
 
     def get_data(self) -> list:
         dataset = []
-        for index in self.scheme:
-            self.r[index] = []
         dim = self.dimension - len(self.ending)
-        count_bytes = dim // 8 if dim % 8 == 0 else dim // 8 + 1
+        count_bytes = dim // 8
+        if dim % 8 != 0:
+            dim += 1
         data = self.raw_file.read(count_bytes)
         data = int.from_bytes(data, byteorder="big")
         data = f"{data:{8 * count_bytes}b}".replace(' ', '0')
