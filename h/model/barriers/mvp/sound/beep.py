@@ -83,8 +83,9 @@ class ClockWidget(GridLayout):
 
     def main(self):
         scheme = {
-            "x": 16, "y": 16, "z": 16,
-            "r": 8, "g": 8, "b": 8,
+            # "x": 16, "y": 16, "z": 16,
+            # "r": 8, "g": 8,
+            "b": 8,
         }
         schemes = {i: 1 + scheme[i] + 1 for i in scheme}
         cpu = {}
@@ -94,28 +95,35 @@ class ClockWidget(GridLayout):
         raw_file = open("input.raw.txt", mode="rb")
         r = []
         for time in range(1, 10):
+            dataset = []
             for index in scheme:
                 data = raw_file.read(scheme[index] // 8)
                 data = int.from_bytes(data, byteorder="big")
-                uniq = ""
-                results = cpu[index].get(raw=data, seek=time)
-                print(
-                    f"time={time} | data={data} | " +
-                    f"{results}"
-                )
-                for i in range(len(results)):
-                    for key, value in results[i].items():
-                        uniq += str(key + sum(value)).rjust(3, '0')
-                r.append(uniq)
-                # result_list = sorted(result.items(), key=lambda x: x[1])
-                # result_dict = dict(result_list)
-                # for hz, _ in results.items():
-                #     duration = 1 / (432 // 8 * 2 ** (n - 2) - hz)
-                #     duration = 100 * math.pi * duration
-                # result_dict[hz] = duration
+                dataset.append({index: data})
+            # dataset = []
+            # for data in range(256):
+            #     dataset.append({"b": data})
+            for chunk in dataset:
+                for index, data in chunk.items():
+                    uniq = ""
+                    results = cpu[index].get(raw=data, seek=time)
+                    for i in range(len(results)):
+                        for key, value in results[i].items():
+                            uniq += "|" + str(key).rjust(3, '0') + \
+                                     "|" +  "|".join(
+                                map(lambda x: str(x).rjust(3, '0'), value)
+                            )
+                    r.append(uniq)
+                    print(
+                        f"time={time} | " +
+                        f"data={str(data).rjust(3, ' ')} | " +
+                        # f"uniq={uniq} | " +
+                        f"{results}"
+                    )
+                    assert len(r) == len(set(r))
+                # duration = 1 / (432 // 8 * 2 ** (n - 2) - hz)
+                # duration = 100 * math.pi * duration
                 # self.beeps.play(frequency=hz)
-                # result_list = sorted(result_dict.items(), key=lambda x: x[1])
-
                 # sleep(result_list[0][1])
                 # self.beeps.stop(0)
                 # for i in range(1, len(result_list)):
@@ -125,7 +133,6 @@ class ClockWidget(GridLayout):
                 #     )
                 #     sleep(result_list[i][1] - result_list[i-1][1])
                 #     self.beeps.stop(0)
-            # assert len(r) == len(set(r))
         raw_file.close()
 
         # plt.plot(fx)
