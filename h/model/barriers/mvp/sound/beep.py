@@ -81,7 +81,7 @@ class ClockWidget(GridLayout):
             # "r": 8,
             # "g": 4,
             # "b": 4,
-            "c": 12,
+            "c": 4,
         }
         scheme_protect = {}
         for s in scheme:
@@ -138,7 +138,7 @@ class ClockWidget(GridLayout):
                             summa += sum(buffer)
                     r[index].append(uniq)
                     print(
-                        f"seek={str(seek).rjust(len(str(dimension)), ' ')} | " +
+                        f"seek={str(seek).rjust(2, ' ')} | " +
                         f"raw={str(raw).rjust(max(scheme.values()), ' ')} | " +
                         f"summa={str(summa).rjust(4, ' ')} " +
                         f"{r[index][-1]}"

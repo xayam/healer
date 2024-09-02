@@ -15,7 +15,7 @@ class CPU:
         self.input = [0] * self.lenght
 
     def get(self, raw: str, seek: int) -> list:
-        self.raw = raw
+        self.raw = raw[::-1]
         self.seek = seek
         return self.process()
 
