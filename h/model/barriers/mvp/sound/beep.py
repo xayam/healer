@@ -82,11 +82,11 @@ class ClockWidget(GridLayout):
         self.ids.b1.disabled = True
 
     def main(self):
-        bits = 16
+        dimension = 16
         scheme = {
             # "x": 16, "y": 16, "z": 16,
             # "r": 8, "g": 8,
-            "b": bits,
+            "b": dimension,
         }
         schemes = {i: 1 + scheme[i] + 1 for i in scheme}
         cpu = {}
@@ -94,14 +94,14 @@ class ClockWidget(GridLayout):
             cpu[i] = CPU(n=schemes[i])
         raw_file = open("input.raw.txt", mode="rb")
         r = []
-        for tachyon in range(1, bits + 1):
+        for tachyon in range(1, dimension + 1):
             dataset = []
             for index in scheme:
                 data = raw_file.read(scheme[index] // 8)
                 data = int.from_bytes(data, byteorder="big")
                 dataset.append({index: data})
             dataset = []
-            for data in range(2 ** bits):
+            for data in range(2 ** dimension):
                 dataset.append({"b": data})
             for chunk in dataset:
                 for index, data in chunk.items():
@@ -123,7 +123,7 @@ class ClockWidget(GridLayout):
                     print(
                         f"time={tachyon} | " +
                         f"data={str(data).rjust(3, ' ')} | " +
-                        f"summa={str(summa).rjust(4, ' ')} | " +
+                        f"summa={str(summa).rjust(4, ' ')} " +
                         f"{r[-1]}"
                     )
                     assert len(r) == len(set(r))
