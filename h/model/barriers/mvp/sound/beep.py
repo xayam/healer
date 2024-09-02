@@ -1,4 +1,7 @@
+import math
 import threading
+from time import sleep
+
 import numpy
 import pygame
 from pygame.mixer import Sound, pre_init
@@ -81,7 +84,7 @@ class ClockWidget(GridLayout):
             # "r": 8,
             # "g": 4,
             # "b": 4,
-            "c": 4,
+            "c": 8,
         }
         scheme_protect = {}
         for s in scheme:
@@ -93,69 +96,70 @@ class ClockWidget(GridLayout):
             cpu[index] = CPU(n=scheme_protect[index])
         raw_file = open("input.raw.txt", mode="rb")
         ending = ""
-        for seek in range(1, 12):
-            dataset = []
-            for index in scheme:
-                r[index] = []
-            dim = dimension - len(ending)
-            count_bytes = \
-                dim // 8 if dim % 8 == 0 \
-                else dim // 8 + 1
-            data = raw_file.read(count_bytes)
-            data = int.from_bytes(data, byteorder="big")
-            data = f"{data:{8 * count_bytes}b}".replace(' ', '0')
-            data = ending + data
-            start = 0
-            for index in scheme:
-                raw = data[start:start + scheme[index]]
-                raw = raw.rjust(scheme[index], '0')
-                dataset.append({index: raw})
-                start += scheme[index]
-            ending = data[start:]
-
-            dataset = []
-            for index in scheme:
-                for data in range(2 ** scheme[index]):
-                    raw = f"{data:{scheme[index]}b}". \
-                        replace(' ', '0')
+        while True:
+            for seek in range(1, dimension + 1):
+                dataset = []
+                for index in scheme:
+                    r[index] = []
+                dim = dimension - len(ending)
+                count_bytes = \
+                    dim // 8 if dim % 8 == 0 \
+                    else dim // 8 + 1
+                data = raw_file.read(count_bytes)
+                data = int.from_bytes(data, byteorder="big")
+                data = f"{data:{8 * count_bytes}b}".replace(' ', '0')
+                data = ending + data
+                start = 0
+                for index in scheme:
+                    raw = data[start:start + scheme[index]]
+                    raw = raw.rjust(scheme[index], '0')
                     dataset.append({index: raw})
+                    start += scheme[index]
+                ending = data[start:]
 
-            for chunk in dataset:
-                for index, raw in chunk.items():
-                    uniq = ""
-                    summa = 0
-                    results = cpu[index].get(raw=raw, seek=seek)
-                    for i in range(len(results)):
-                        for key, value in results[i].items():
-                            buffer = []
-                            for v in value:
-                                buffer.append(key + v)
-                            uniq += "|" + str(key).rjust(2, '0') + \
-                                    "|" + "|".join(
-                                map(lambda x: str(x).rjust(
-                                    2, '0'),
-                                    value))
-                            summa += sum(buffer)
-                    r[index].append(uniq)
-                    print(
-                        f"seek={str(seek).rjust(2, ' ')} | " +
-                        f"raw={str(raw).rjust(max(scheme.values()), ' ')} | " +
-                        f"summa={str(summa).rjust(4, ' ')} " +
-                        f"{r[index][-1]}"
-                    )
-                    assert len(r[index]) == len(set(r[index]))
-                # duration = 1 / (432 // 8 * 2 ** (n - 2) - hz)
-                # duration = 100 * math.pi * duration
-                # self.beeps.play(frequency=hz)
-                # sleep(result_list[0][1])
-                # self.beeps.stop(0)
-                # for i in range(1, len(result_list)):
-                #     print(
-                #      f"time={time} | data={data} | " +
-                #      f"hz={result_list[i][0]} | duration={result_list[i][1]}"
-                #     )
-                #     sleep(result_list[i][1] - result_list[i-1][1])
-                #     self.beeps.stop(0)
+                dataset = []
+                for index in scheme:
+                    for data in range(2 ** scheme[index]):
+                        raw = f"{data:{scheme[index]}b}". \
+                            replace(' ', '0')
+                        dataset.append({index: raw})
+
+                for chunk in dataset:
+                    for index, raw in chunk.items():
+                        uniq = ""
+                        summa = 0
+                        results = cpu[index].get(raw=raw, seek=seek)
+                        for i in range(len(results)):
+                            for key, value in results[i].items():
+                                buffer = []
+                                for v in value:
+                                    buffer.append(key + v)
+                                uniq += "|>" + str(key).rjust(2, ' ') + \
+                                    "<|" + "|".join(map(lambda x: str(x).rjust(
+                                        3, ' '),
+                                        value))
+                                summa += sum(buffer)
+                        r[index].append(uniq)
+                        print(
+                            f"seek={str(seek).rjust(2, ' ')} | " +
+                            f"raw={str(raw).rjust(max(scheme.values()), ' ')} | " +
+                            f"summa={str(summa).rjust(4, ' ')} " +
+                            f"{r[index][-1]}"
+                        )
+                        assert len(r[index]) == len(set(r[index]))
+                        hz = summa
+                        duration = 1 / (math.pi ** 2 * 2 ** dimension - hz)
+                        self.beeps.play(frequency=hz)
+                        sleep(duration)
+                        self.beeps.stop(0)
+                    # for i in range(1, len(result_list)):
+                    #     print(
+                    #      f"time={time} | data={data} | " +
+                    #      f"hz={result_list[i][0]} | duration={result_list[i][1]}"
+                    #     )
+                    #     sleep(result_list[i][1] - result_list[i-1][1])
+                    #     self.beeps.stop(0)
+            break
         raw_file.close()
 
         # plt.plot(fx)
