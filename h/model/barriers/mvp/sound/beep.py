@@ -82,44 +82,37 @@ class ClockWidget(GridLayout):
         self.ids.b1.disabled = True
 
     def main(self):
-        n = 4
-        limits = [1 * 2 ** i for i in range(n-3)]
+        n = 10
+        limits = [1]
         cpus = []
         for limit in limits:
-            cpus.append(CPU8(limit=limit, n=10))
+            cpus.append(CPU8(limit=limit, n=n))
         # raw_file = open("input.raw.txt", mode="rb")
         # rnd = random.SystemRandom(0)
         r = []
-        for time in range(1, 10):
+        for time in range(1, n):
             # data = raw_file.read(1)
             for data in range(256):
                 # data = int.from_bytes(data, byteorder="big")
-                result = {}
                 for cpu in cpus:
                     uniq = ""
                     results = cpu.get(raw=data, seek=time)
-                    # result[sum(results.keys()) // len(results)] = \
-                    #        sum(results.values()) // len(results)
-                    # r.append(results)
                     print(
                         f"time={time} | data={data} | " +
                         f"{results}"
                     )
                     for i in range(len(results)):
                         for key, value in results[i].items():
-                            values = []
-                            for val in value:
-                                values.append(val)
-                            uniq += str(i) + str(key).rjust(3, '0') + \
-                                    "".join(map(str, values))
+                            uniq += str(key + sum(value)).rjust(3, '0')
+                    # print(len(uniq))
                     r.append(uniq)
                 # result_list = sorted(result.items(), key=lambda x: x[1])
                 # result_dict = dict(result_list)
                 # for hz, _ in results.items():
                 #     duration = 1 / (432 // 8 * 2 ** (n - 2) - hz)
                 #     duration = 100 * math.pi * duration
-                    # result_dict[hz] = duration
-                    # self.beeps.play(frequency=hz)
+                # result_dict[hz] = duration
+                # self.beeps.play(frequency=hz)
                 # result_list = sorted(result_dict.items(), key=lambda x: x[1])
 
                 # sleep(result_list[0][1])
@@ -136,6 +129,7 @@ class ClockWidget(GridLayout):
 
         # plt.plot(fx)
         # plt.show()
+
 
 class clockdemoapp(App):
     def build(self):

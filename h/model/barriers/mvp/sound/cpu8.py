@@ -51,6 +51,6 @@ class CPU8:
             for f in range(len(self.freq_limit)):
                 result.append(self.input[i] * states[f])
             # print(positions[i] + sum(result), result)
-            results.append({positions[i] + sum(result):  result})
+            results.append({positions[i]:  result})
         # results = sorted(results.items(), key=lambda x: x[1])
         return results
