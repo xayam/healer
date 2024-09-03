@@ -1,3 +1,4 @@
+import math
 from time import sleep
 
 
@@ -25,7 +26,7 @@ class CPU:
         self.results_old = self.results[:]
         self.results = self.process()
         if not mute and self.results_old:
-            self.play()
+            self.say()
         return self.results
 
     def check(self, results: list) -> bool:
@@ -34,25 +35,36 @@ class CPU:
         )
         return recovery == self.raw
 
-    def play(self):
-        print(self.results_old)
-        print(self.results)
-        # hz = summa
-        # duration = 1 / (math.pi ** 2 * 2 ** self.dimension - hz)
-        # duration = duration * 2 ** seek
+    def say(self):
+        # print(self.results_old)
+        # print(self.results)
+        hz = self.collision()
+        # hz = math.pi ** 2 * 2 ** self.lenght - hz
+        # duration = 1 / hz
+        # duration = duration * 2 ** self.seek
+        # hz = round(hz)
+        # print(hz)
         # print(duration)
-        # self.beeps.play(frequency=55)
-        # sleep(0)
-        # self.beeps.stop(0)
-        # for i in range(1, len(result_list)):
-        #     print(
-        #      f"time={time} | data={data} | " +
-        #      f"hz={result_list[i][0]} | duration={result_list[i][1]}"
-        #     )
-        #     sleep(result_list[i][1] - result_list[i-1][1])
-        #     self.beeps.stop(0)
+        self.beeps.play(frequency=hz)
+        sleep(0.022)
+        self.beeps.stop(0)
 
-    def value2input(self):
+    def collision(self) -> int:
+        result = []
+        summa = 0
+        for index in range(len(self.results_old)):
+            arr = []
+            key, value = list(self.results[index].items())[0]
+            key_old, value_old = list(self.results_old[index].items())[0]
+            for i in range(len(value)):
+                delta = value[i] - value_old[i]
+                summa += abs(delta)
+                arr.append(delta)
+            result.append({key - key_old: arr})
+        return summa
+
+
+    def raw2input(self):
         i = 0
         for digit in self.raw:
             self.input[i] = -1 if int(digit) == 0 else 1
@@ -77,7 +89,7 @@ class CPU:
         return states, positions
 
     def process(self) -> list:
-        self.value2input()
+        self.raw2input()
         states, positions = self.freq2statepos()
         results = []
         for i in range(len(self.input)):
