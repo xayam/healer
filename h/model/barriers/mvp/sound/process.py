@@ -33,6 +33,7 @@ class Process:
         for index in self.scheme:
             self.cpu[index] = CPU(
                 n=self.scheme_protect[index],
+                limit=1,
                 beeps=self.beeps
             )
             self.res[index] = []
