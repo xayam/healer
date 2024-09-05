@@ -25,8 +25,7 @@ class Process:
             self.scheme_protect[schem] = 1 + self.scheme[schem] + 1
         self.dimension = sum(self.scheme.values())
 
-
-    def main(self):
+    def init(self):
         self.cpu = {}
         self.res = {}
         self.ending = ""
@@ -38,6 +37,8 @@ class Process:
             )
             self.res[index] = []
 
+    def main(self):
+        self.init()
         self.raw_file = open("input.raw.txt", mode="rb")
         seek = 1
         while self.dataset is not None:
