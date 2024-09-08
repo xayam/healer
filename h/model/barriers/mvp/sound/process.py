@@ -79,15 +79,15 @@ class Process:
                 dataset.append({index: raw})
         return dataset
 
-    def get_data(self) -> list:
+    def get_data(self):
         dataset = []
         dim = self.dimension - len(self.ending)
         count_bytes = dim // 8
         if dim % 8 != 0:
             dim += 1
         data = self.raw_file.read(count_bytes)
-        # if not data:
-        #     return []
+        if not data:
+            return None
         data = int.from_bytes(data, byteorder="big")
         data = f"{data:{8 * count_bytes}b}".replace(' ', '0')
         data = self.ending + data
